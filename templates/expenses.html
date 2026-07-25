@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Expenses - KashFlow{% endblock %}
+
+{% block content %}
+<!-- Metrics Overview -->
+<section class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-header">
+            <span>Total Spent</span>
+            <div class="metric-icon icon-rose">💸</div>
+        </div>
+        <div class="metric-value text-expense">-${{ "%.2f"|format(stats.total_spent) }}</div>
+        <div class="metric-sub">Across all recorded expenses</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-header">
+            <span>Total Transactions</span>
+            <div class="metric-icon icon-cyan">📊</div>
+        </div>
+        <div class="metric-value">{{ stats.total_count }}</div>
+        <div class="metric-sub">Total expense entries</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-header">
+            <span>Average Expense</span>
+            <div class="metric-icon icon-purple">📈</div>
+        </div>
+        <div class="metric-value">${{ "%.2f"|format(stats.avg_expense) }}</div>
+        <div class="metric-sub">Average per transaction</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-header">
+            <span>Top Spending Category</span>
+            <div class="metric-icon icon-amber">🏷️</div>
+        </div>
+        <div class="metric-value" style="font-size: 1.4rem;">{{ stats.top_category }}</div>
+        <div class="metric-sub">Highest expense category</div>
+    </div>
+</section>
+
+<!-- CATEGORY OVER-SPENDING WARNINGS & RECOMMENDATIONS -->
+{% if stats.category_warnings %}
+<section style="margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+            ⚠️ Category Spending Alerts & Savings Opportunities
+        </h3>
+    </div>
+    <div class="insights-grid">
+        {% for warn in stats.category_warnings %}
+        <div class="insight-card insight-{{ warn.status }}">
+            <div class="insight-icon-wrapper">⚠️</div>
+            <div class="insight-body">
+                <h4>High Spending in {{ warn.category }}</h4>
+                <p>{{ warn.message }}</p>
+                <div class="insight-action">
+                    💡 <strong>Savings Tip:</strong> {{ warn.suggestion }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Visual Analytics Grid -->
+{% if expenses %}
+<section class="dashboard-grid">
+    <div class="card">
+        <div class="card-title">
+            <span>📊 Spending by Category</span>
+        </div>
+        <div style="position: relative; height: 260px;">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-title">
+            <span>📈 Daily Expense Trends</span>
+        </div>
+        <div style="position: relative; height: 260px;">
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Transactions Section -->
+<section class="card">
+    <div class="card-title">
+        <span>Expense Records</span>
+        <button type="button" class="btn-primary open-expense-modal-btn" style="font-size: 0.85rem;">+ Add Expense</button>
+
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+        <div class="search-filter-group">
+            <div class="search-box">
+                <span>🔍</span>
+                <input type="text" id="tableSearchInput" placeholder="Search expenses...">
+            </div>
+            <select id="tableCategoryFilter" class="filter-select">
+                <option value="all">All Categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Table -->
+    {% if expenses %}
+    <div class="table-responsive">
+        <table class="expense-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Method</th>
+                    <th>Amount</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in expenses %}
+                <tr class="data-row" 
+                    data-description="{{ e.description|lower }}" 
+                    data-category="{{ e.category }}" 
+                    data-notes="{{ (e.notes or '')|lower }}">
+                    <td style="color: var(--text-muted); font-size: 0.9rem;">{{ e.date }}</td>
+                    <td>
+                        <div style="font-weight: 600;">{{ e.description }}</div>
+                        {% if e.notes %}
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">{{ e.notes }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set cat_lower = (e.category or 'general')|lower %}
+                        {% set badge_class = 'badge-general' %}
+                        {% if 'food' in cat_lower %}{% set badge_class = 'badge-food' %}
+                        {% elif 'trans' in cat_lower %}{% set badge_class = 'badge-transport' %}
+                        {% elif 'hous' in cat_lower %}{% set badge_class = 'badge-housing' %}
+                        {% elif 'shop' in cat_lower %}{% set badge_class = 'badge-shopping' %}
+                        {% elif 'util' in cat_lower %}{% set badge_class = 'badge-utilities' %}
+                        {% elif 'heal' in cat_lower %}{% set badge_class = 'badge-health' %}
+                        {% endif %}
+                        <span class="badge {{ badge_class }}">
+                            {{ e.category }}
+                        </span>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ e.payment_method or 'Card' }}</td>
+                    <td class="amount-text text-expense">-${{ "%.2f"|format(e.amount) }}</td>
+                    <td style="text-align: right;">
+                        <button type="button" class="btn-secondary edit-modal-btn" style="padding: 0.35rem 0.65rem; font-size: 0.85rem;" 
+                                data-id="{{ e.id }}"
+                                data-description="{{ e.description }}"
+                                data-amount="{{ e.amount }}"
+                                data-category="{{ e.category }}"
+                                data-date="{{ e.date }}"
+                                data-payment-method="{{ e.payment_method or 'Card' }}"
+                                data-notes="{{ e.notes or '' }}">
+                            ✏️ Edit
+                        </button>
+                        <form action="{{ url_for('delete_expense', id=e.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-danger" style="padding: 0.35rem 0.65rem; font-size: 0.85rem;">🗑️ Delete</button>
+                        </form>
+
+
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr id="noResultsRow" style="display: none;">
+                    <td colspan="6" class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <p>No matching expenses found for your search.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">💸</div>
+        <h3>No expenses recorded yet</h3>
+        <p style="margin-top: 0.5rem;">Click "+ Add Expense" above to create your first entry!</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.chartCategoryData = {{ stats.income_chart | tojson }};
+    window.chartTrendData = {{ stats.comparison_chart | tojson }};
+</script>
+{% endblock %}

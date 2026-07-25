@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — KashFlow</title>
+    <meta name="description" content="Sign in to KashFlow — your smart personal finance advisor.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/premium.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+<div class="auth-page">
+
+    <!-- Left panel — branding -->
+    <div class="auth-brand-panel">
+        <div class="auth-brand-content">
+            <div class="auth-logo">⚡</div>
+            <h1 class="auth-app-name">KashFlow</h1>
+            <p class="auth-tagline">Your smart money advisor.<br>Built for the way you live.</p>
+
+            <div class="auth-features">
+                <div class="auth-feature"><span class="auth-feature-icon">📊</span> Real-time Financial Health Score</div>
+                <div class="auth-feature"><span class="auth-feature-icon">🎯</span> Category Budget Limits & Alerts</div>
+                <div class="auth-feature"><span class="auth-feature-icon">💡</span> Smart AI Insights & Recommendations</div>
+                <div class="auth-feature"><span class="auth-feature-icon">🔒</span> Your data is private & secure</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel — login form -->
+    <div class="auth-form-panel">
+        <div class="auth-card">
+            <h2 class="auth-card-title">Welcome back 👋</h2>
+            <p class="auth-card-sub">Sign in to your KashFlow account</p>
+
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                <div class="auth-alert {{ 'auth-alert-error' if category == 'error' else 'auth-alert-success' }}">
+                    {{ '⚠️' if category == 'error' else '✅' }} {{ message }}
+                </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+                <div class="auth-field">
+                    <label for="email">Email address</label>
+                    <input type="email" id="email" name="email" class="auth-input"
+                           placeholder="you@example.com" required autofocus autocomplete="email">
+                </div>
+                <div class="auth-field">
+                    <label for="password">Password</label>
+                    <div class="auth-input-wrap">
+                        <input type="password" id="password" name="password" class="auth-input"
+                               placeholder="Your password" required autocomplete="current-password">
+                        <button type="button" class="auth-eye-btn" id="togglePassword">👁</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-btn-primary">Sign In →</button>
+            </form>
+
+            <p class="auth-switch">
+                Don't have an account? <a href="{{ url_for('register') }}">Create one free</a>
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.getElementById('togglePassword')?.addEventListener('click', function() {
+    const pwd = document.getElementById('password');
+    pwd.type = pwd.type === 'password' ? 'text' : 'password';
+    this.textContent = pwd.type === 'password' ? '👁' : '🙈';
+});
+</script>
+</body>
+</html>

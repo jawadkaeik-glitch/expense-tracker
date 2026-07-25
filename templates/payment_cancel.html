@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Payment Cancelled — KashFlow{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 4rem auto; text-align: center;">
+    <div class="card" style="padding: 3rem 2rem;">
+
+        <div style="font-size: 3.5rem; margin-bottom: 1rem;">
+            😊
+        </div>
+
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+            No worries!
+        </h2>
+
+        <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1.5rem; line-height: 1.6;">
+            Your payment was not processed and you have not been charged. You can continue using KashFlow's free features, or upgrade whenever you're ready.
+        </p>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('dashboard') }}" class="btn-secondary" style="padding: 0.75rem 1.5rem;">
+                ← Back to Dashboard
+            </a>
+            <a href="{{ url_for('pricing') }}" class="btn-primary" style="padding: 0.75rem 1.5rem;">
+                View Plans
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

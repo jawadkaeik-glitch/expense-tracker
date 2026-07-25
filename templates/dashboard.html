@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}Overview - KashFlow{% endblock %}
+
+{% block content %}
+
+{# ===== ONBOARDING BANNER (only shown when completely empty) ===== #}
+{% if stats.total_income == 0 and stats.total_expense == 0 %}
+<div class="onboarding-banner">
+    <h2>Welcome to KashFlow! ⚡</h2>
+    <p>Your smart money advisor is ready. Follow these 3 steps to get started:</p>
+    <div class="onboarding-steps">
+        <div class="onboarding-step">
+            <div class="step-number">1</div>
+            <div class="step-icon">💰</div>
+            <div class="step-label">Click <strong>"+ Income"</strong> to add your salary or earnings</div>
+        </div>
+        <div class="onboarding-step">
+            <div class="step-number">2</div>
+            <div class="step-icon">💸</div>
+            <div class="step-label">Click <strong>"+ Expense"</strong> or the <strong>⚡ button</strong> bottom-right to log spending</div>
+        </div>
+        <div class="onboarding-step">
+            <div class="step-number">3</div>
+            <div class="step-icon">🎯</div>
+            <div class="step-label">Watch your <strong>Health Score</strong> and daily safe limit update in real time</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Overview Financial Metrics & Health Score Header -->
+<section class="metrics-grid">
+    <!-- Financial Health Score -->
+    <div class="metric-card" style="position: relative;">
+        <div class="metric-header">
+            <span>Financial Health Score</span>
+            <div class="metric-icon icon-purple">🎯</div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem;">
+            <div class="metric-value">{{ stats.health_score }}/100</div>
+            <span class="health-badge health-{{ stats.health_color }}">
+                {{ stats.health_grade }}
+            </span>
+        </div>
+        <div class="metric-sub">Based on savings rate & spending limits</div>
+    </div>
+
+    <!-- Daily Safe-To-Spend Allowance -->
+    <div class="metric-card">
+        <div class="metric-header">
+            <span>Daily Safe Limit</span>
+            <div class="metric-icon icon-cyan">📅</div>
+        </div>
+        <div class="metric-value {{ 'text-income' if stats.daily_safe > 0 else 'text-expense' }}">
+            ${{ "%.2f"|format(stats.daily_safe) }}/day
+        </div>
+        <div class="metric-sub">{{ stats.days_left }} days left in month (${{ "%.2f"|format(stats.unpaid_bills) }} unpaid bills)</div>
+    </div>
+
+    <!-- Total Income -->
+    <div class="metric-card">
+        <div class="metric-header">
+            <span>Total Income</span>
+            <div class="metric-icon icon-emerald">💰</div>
+        </div>
+        <div class="metric-value text-income">+${{ "%.2f"|format(stats.total_income) }}</div>
+        <div class="metric-sub">{{ stats.income_count }} income entries</div>
+    </div>
+
+    <!-- Total Expenses -->
+    <div class="metric-card">
+        <div class="metric-header">
+            <span>Total Expenses</span>
+            <div class="metric-icon icon-rose">💸</div>
+        </div>
+        <div class="metric-value text-expense">-${{ "%.2f"|format(stats.total_expense) }}</div>
+        <div class="metric-sub">{{ stats.expense_count }} expense entries</div>
+    </div>
+</section>
+
+<!-- SMART FINANCIAL INSIGHTS & ACTIONABLE RECOMMENDATIONS -->
+{% if stats.insights %}
+<section style="margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+            💡 Smart Financial Insights & Over-Spending Alerts
+        </h3>
+    </div>
+    <div class="insights-grid">
+        {% for item in stats.insights %}
+        <div class="insight-card insight-{{ item.type }}">
+            <div class="insight-icon-wrapper">{{ item.icon }}</div>
+            <div class="insight-body">
+                <h4>{{ item.title }}</h4>
+                <p>{{ item.message }}</p>
+                <div class="insight-action">
+                    💡 <strong>Recommendation:</strong> {{ item.action }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Visual Comparison Charts & 50/30/20 Budget Breakdown -->
+{% if is_premium %}
+<section class="dashboard-grid">
+    <div class="card">
+        <div class="card-title">
+            <span>📊 Income vs Expenses vs Net Savings</span>
+        </div>
+        <div style="position: relative; height: 260px;">
+            <canvas id="comparisonChart"></canvas>
+        </div>
+    </div>
+
+    <!-- 50/30/20 Budget Allocation Breakdown -->
+    <div class="card">
+        <div class="card-title">
+            <span>🎯 50/30/20 Budget Allocation</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Recommended benchmark: 50% Needs, 30% Wants, 20% Savings.
+        </p>
+        <div class="budget-rule-container">
+            <!-- Needs (50%) -->
+            <div class="rule-item">
+                <div class="rule-header">
+                    <span>🏠 Essential Needs (Housing, Food, Utilities)</span>
+                    <span>{{ stats.rule_50_30_20.needs_pct }}% / 50%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill progress-emerald" style="width: {{ stats.rule_50_30_20.needs_pct }}%;"></div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: right;">${{ "%.2f"|format(stats.rule_50_30_20.needs_amt) }} spent</div>
+            </div>
+            <!-- Wants (30%) -->
+            <div class="rule-item">
+                <div class="rule-header">
+                    <span>🛍️ Discretionary Wants (Shopping, General)</span>
+                    <span>{{ stats.rule_50_30_20.wants_pct }}% / 30%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill progress-indigo" style="width: {{ stats.rule_50_30_20.wants_pct }}%;"></div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: right;">${{ "%.2f"|format(stats.rule_50_30_20.wants_amt) }} spent</div>
+            </div>
+            <!-- Savings (20%) -->
+            <div class="rule-item">
+                <div class="rule-header">
+                    <span>💰 Net Savings / Debt Repayment</span>
+                    <span>{{ stats.rule_50_30_20.savings_pct }}% / 20%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill progress-purple" style="width: {{ stats.rule_50_30_20.savings_pct }}%;"></div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: right;">${{ "%.2f"|format(stats.rule_50_30_20.savings_amt) }} saved</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% else %}
+<!-- Premium lock for charts section -->
+<div class="lock-gate" style="margin-bottom:2rem;">
+    <div class="lock-blur-preview">
+        <section class="dashboard-grid">
+            <div class="card" style="height:260px;"></div>
+            <div class="card" style="height:260px;"></div>
+        </section>
+    </div>
+    <div class="lock-overlay">
+        <span class="lock-icon-lg">🔒</span>
+        <h3>Advanced Charts — Premium Feature</h3>
+        <p>Visualize your income vs expenses, 50/30/20 budget breakdown, and spending trends.</p>
+        <a href="{{ url_for('pricing') }}" class="btn-upgrade">⭐ Upgrade for $4.99/mo</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- UPCOMING BILLS & SAVINGS GOALS PREVIEW GRID -->
+{% if is_premium %}
+<section class="dashboard-grid" style="margin-bottom: 2rem;">
+    <!-- Upcoming Bills Preview -->
+    <div class="card">
+        <div class="card-title">
+            <span>📅 Upcoming Bills & Subscriptions</span>
+            <a href="{{ url_for('list_bills') }}" class="btn-secondary" style="font-size: 0.8rem;">Manage Bills</a>
+        </div>
+        {% if bills %}
+        <div class="table-responsive">
+            <table class="expense-table">
+                <thead>
+                    <tr>
+                        <th>Bill Name</th>
+                        <th>Due Date</th>
+                        <th>Amount</th>
+                        <th style="text-align: right;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in bills %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ b.name }}</td>
+                        <td style="color: var(--text-muted); font-size: 0.85rem;">{{ b.due_date }}</td>
+                        <td style="font-weight: 700;">${{ "%.2f"|format(b.amount) }}</td>
+                        <td style="text-align: right;">
+                            <form action="{{ url_for('toggle_bill', id=b.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                                    {{ '✅ Paid' if b.is_paid else '⏳ Mark Paid' }}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding: 1.5rem;">
+            <p>No upcoming bills recorded.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Savings Goals Preview -->
+    <div class="card">
+        <div class="card-title">
+            <span>🎯 Target Savings Goals</span>
+            <a href="{{ url_for('list_goals') }}" class="btn-secondary" style="font-size: 0.8rem;">Manage Goals</a>
+        </div>
+        {% if goals %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for g in goals %}
+            {% set pct = ((g.current_amount / g.target_amount) * 100)|round|int if g.target_amount > 0 else 0 %}
+            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600;">
+                    <span>{{ g.title }}</span>
+                    <span>${{ "%.0f"|format(g.current_amount) }} / ${{ "%.0f"|format(g.target_amount) }} ({{ pct }}%)</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill progress-emerald" style="width: {{ 100 if pct > 100 else pct }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding: 1.5rem;">
+            <p>No savings goals set yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+{# ===== BUDGET LIMITS SECTION (premium only) ===== #}
+{% if is_premium %}
+{% if stats.budget_limits %}
+<section class="card" style="margin-bottom: 2rem;">
+    <div class="card-title">
+        <span>🎯 Monthly Budget Limits</span>
+        <a href="{{ url_for('list_budgets') }}" class="btn-secondary" style="font-size:0.8rem;">Manage Budgets</a>
+    </div>
+    <div class="budget-limits-grid">
+        {% for b in stats.budget_limits %}
+        <div class="budget-item">
+            <div class="budget-item-header">
+                <span>{{ b.category }}</span>
+                <span class="budget-status-label budget-status-{{ b.status }}">{{ b.status_label }}</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill
+                    {% if b.status == 'over' %}progress-rose
+                    {% elif b.status == 'warning' %}progress-amber
+                    {% else %}progress-emerald{% endif %}"
+                    style="width: {{ b.pct }}%;"></div>
+            </div>
+            <div class="budget-sub">${{ "%.0f"|format(b.spent) }} spent of ${{ "%.0f"|format(b.limit) }} limit</div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<section style="margin-bottom:2rem;">
+    <div class="card" style="border-style: dashed; text-align: center; padding: 1.25rem;">
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            🎯 No budget limits set yet.
+            <a href="{{ url_for('list_budgets') }}" style="color: var(--accent-primary); font-weight: 600;">Set a monthly limit per category</a>
+            to get spending alerts before you overshoot!
+        </p>
+    </div>
+</section>
+{% endif %}
+{% endif %}
+
+{# ===== CONTEXTUAL AFFILIATE RECOMMENDATIONS ===== #}
+{% if stats.affiliate_recs %}
+<section style="margin-bottom: 2rem;">
+    <div class="affiliate-section-header">
+        <h3 style="font-size: 1rem; font-weight: 700;">💡 Recommended for Your Situation</h3>
+        <span class="affiliate-disclaimer">Partner recommendations &mdash; we may earn a referral fee</span>
+    </div>
+    <div class="affiliate-grid">
+        {% for rec in stats.affiliate_recs %}
+        <div class="affiliate-card">
+            <span class="affiliate-partner-label">Partner</span>
+            <div class="affiliate-icon">{{ rec.icon }}</div>
+            <div class="affiliate-body">
+                <h4>{{ rec.title }}</h4>
+                <p>{{ rec.message }}</p>
+                <a href="{{ rec.url }}" target="_blank" rel="noopener" class="affiliate-cta aff-{{ rec.color }}">{{ rec.cta }}</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Recent Financial Activity Feed -->
+<section class="card">
+    <div class="card-title">
+        <span>Recent Financial Activity</span>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('list_incomes') }}" class="btn-secondary" style="font-size: 0.85rem;">View Incomes</a>
+            <a href="{{ url_for('list_expenses') }}" class="btn-secondary" style="font-size: 0.85rem;">View Expenses</a>
+        </div>
+    </div>
+
+    {% if recent_activities %}
+    <div class="table-responsive">
+        <table class="expense-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Method/Source</th>
+                    <th style="text-align: right;">Amount</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for act in recent_activities %}
+                <tr class="expense-row">
+                    <td>
+                        <span class="badge {{ 'badge-type-income' if act.type == 'income' else 'badge-type-expense' }}">
+                            {{ '➕ Income' if act.type == 'income' else '➖ Expense' }}
+                        </span>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.9rem;">{{ act.date }}</td>
+                    <td>
+                        <div style="font-weight: 600;">{{ act.description }}</div>
+                        {% if act.notes %}
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">{{ act.notes }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-general">{{ act.category }}</span>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ act.method or 'N/A' }}</td>
+                    <td style="text-align: right; font-weight: 700; font-size: 1.05rem;" class="{{ 'text-income' if act.type == 'income' else 'text-expense' }}">
+                        {{ '+' if act.type == 'income' else '-' }}${{ "%.2f"|format(act.amount) }}
+                    </td>
+                    <td style="text-align: right;">
+                        {% if act.type == 'expense' %}
+                        <form action="{{ url_for('delete_expense', id=act.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="return confirm('Delete this expense?');">🗑️</button>
+                        </form>
+                        {% else %}
+                        <form action="{{ url_for('delete_income', id=act.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="return confirm('Delete this income?');">🗑️</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">💳</div>
+        <h3>No financial records found</h3>
+        <p style="margin-top: 0.5rem;">Use the "+ Add Income" or "+ Add Expense" buttons above to get started!</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.chartComparisonData = {{ stats.comparison_chart | tojson }};
+    window.chartIncomeData = {{ stats.income_chart | tojson }};
+</script>
+{% endblock %}

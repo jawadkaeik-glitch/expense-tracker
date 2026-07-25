@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account — KashFlow</title>
+    <meta name="description" content="Create your free KashFlow account and start tracking your money smarter.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/premium.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body>
+<div class="auth-page">
+
+    <!-- Left panel — branding -->
+    <div class="auth-brand-panel">
+        <div class="auth-brand-content">
+            <div class="auth-logo">⚡</div>
+            <h1 class="auth-app-name">KashFlow</h1>
+            <p class="auth-tagline">Join thousands of people<br>taking control of their money.</p>
+
+            <div class="auth-features">
+                <div class="auth-feature"><span class="auth-feature-icon">🆓</span> Free forever — no credit card needed</div>
+                <div class="auth-feature"><span class="auth-feature-icon">⚡</span> Set up in under 2 minutes</div>
+                <div class="auth-feature"><span class="auth-feature-icon">📱</span> Works on any device</div>
+                <div class="auth-feature"><span class="auth-feature-icon">🔒</span> Your data stays private</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel — register form -->
+    <div class="auth-form-panel">
+        <div class="auth-card">
+            <h2 class="auth-card-title">Create your account 🚀</h2>
+            <p class="auth-card-sub">It's free. No credit card required.</p>
+
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                <div class="auth-alert {{ 'auth-alert-error' if category == 'error' else 'auth-alert-success' }}">
+                    {{ '⚠️' if category == 'error' else '✅' }} {{ message }}
+                </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('register') }}" class="auth-form">
+                <div class="auth-field">
+                    <label for="name">Your first name</label>
+                    <input type="text" id="name" name="name" class="auth-input"
+                           placeholder="Alex" required autofocus autocomplete="given-name">
+                </div>
+                <div class="auth-field">
+                    <label for="email">Email address</label>
+                    <input type="email" id="email" name="email" class="auth-input"
+                           placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="auth-field">
+                    <label for="password">Password <span style="color:var(--text-muted);font-weight:400;">(min 8 chars)</span></label>
+                    <div class="auth-input-wrap">
+                        <input type="password" id="password" name="password" class="auth-input"
+                               placeholder="Create a strong password" required minlength="8" autocomplete="new-password">
+                        <button type="button" class="auth-eye-btn" id="togglePassword">👁</button>
+                    </div>
+                    <!-- Strength bar -->
+                    <div class="password-strength" id="strengthBar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <span class="strength-label" id="strengthLabel"></span>
+                </div>
+                <div class="auth-field">
+                    <label for="confirm_password">Confirm password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="auth-input"
+                           placeholder="Repeat your password" required autocomplete="new-password">
+                </div>
+
+                <button type="submit" class="auth-btn-primary">Create Free Account →</button>
+
+                <p style="font-size:0.78rem;color:var(--text-muted);text-align:center;margin-top:0.5rem;">
+                    By signing up you agree to our <a href="#" style="color:var(--accent-primary);">Terms</a> and <a href="#" style="color:var(--accent-primary);">Privacy Policy</a>.
+                </p>
+            </form>
+
+            <p class="auth-switch">
+                Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Password visibility toggle
+document.getElementById('togglePassword')?.addEventListener('click', function() {
+    const pwd = document.getElementById('password');
+    pwd.type = pwd.type === 'password' ? 'text' : 'password';
+    this.textContent = pwd.type === 'password' ? '👁' : '🙈';
+});
+
+// Password strength meter
+const pwdInput = document.getElementById('password');
+const fill     = document.getElementById('strengthFill');
+const label    = document.getElementById('strengthLabel');
+
+pwdInput?.addEventListener('input', function() {
+    const val = this.value;
+    let score = 0;
+    if (val.length >= 8)  score++;
+    if (val.length >= 12) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    const pct = (score / 5) * 100;
+    fill.style.width = pct + '%';
+
+    if (score <= 1)      { fill.className = 'strength-fill str-weak';   label.textContent = 'Weak'; label.style.color = '#ef4444'; }
+    else if (score <= 3) { fill.className = 'strength-fill str-medium'; label.textContent = 'Fair'; label.style.color = '#f59e0b'; }
+    else                 { fill.className = 'strength-fill str-strong'; label.textContent = 'Strong 💪'; label.style.color = '#10b981'; }
+});
+</script>
+</body>
+</html>

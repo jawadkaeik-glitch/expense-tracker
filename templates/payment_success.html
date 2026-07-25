@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Payment Successful — KashFlow{% endblock %}
+
+{% block content %}
+<div style="max-width: 550px; margin: 4rem auto; text-align: center;">
+    <div class="card" style="padding: 3rem 2rem;">
+
+        <!-- Success Animation -->
+        <div style="font-size: 4rem; margin-bottom: 1rem; animation: bounceIn 0.6s ease;">
+            🎉
+        </div>
+
+        <h2 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Welcome to <span style="background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Premium!</span>
+        </h2>
+
+        <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 2rem; line-height: 1.6;">
+            Your payment was successful. All Premium features are now unlocked — budgets, goals, bills, advanced charts, and CSV exports. Let's take your finances to the next level!
+        </p>
+
+        <!-- Feature Unlock Summary -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 2rem; text-align: left;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; background: rgba(16,185,129,0.1); border-radius: 8px;">
+                <span>✅</span> <span style="font-size: 0.85rem;">Budget Limits</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; background: rgba(16,185,129,0.1); border-radius: 8px;">
+                <span>✅</span> <span style="font-size: 0.85rem;">Savings Goals</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; background: rgba(16,185,129,0.1); border-radius: 8px;">
+                <span>✅</span> <span style="font-size: 0.85rem;">Bills Tracker</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; background: rgba(16,185,129,0.1); border-radius: 8px;">
+                <span>✅</span> <span style="font-size: 0.85rem;">Advanced Charts</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; background: rgba(16,185,129,0.1); border-radius: 8px;">
+                <span>✅</span> <span style="font-size: 0.85rem;">CSV Export</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; background: rgba(16,185,129,0.1); border-radius: 8px;">
+                <span>✅</span> <span style="font-size: 0.85rem;">Priority Updates</span>
+            </div>
+        </div>
+
+        <a href="{{ url_for('dashboard') }}" class="btn-primary" style="display: inline-flex; padding: 0.85rem 2rem; font-size: 1rem;">
+            🚀 Go to Dashboard
+        </a>
+
+        <p style="color: var(--text-muted); font-size: 0.78rem; margin-top: 1.5rem;">
+            A receipt has been sent to your email by Stripe. You can manage your subscription from the <a href="{{ url_for('pricing') }}" style="color: var(--accent-primary);">Pricing page</a>.
+        </p>
+    </div>
+</div>
+
+<style>
+@keyframes bounceIn {
+    0%   { transform: scale(0.3); opacity: 0; }
+    50%  { transform: scale(1.1); }
+    70%  { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+}
+</style>
+{% endblock %}

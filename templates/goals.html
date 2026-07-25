@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Savings Goals - KashFlow{% endblock %}
+
+{% block content %}
+{% if not is_premium %}
+<div class="premium-gate-page">
+    <span class="gate-icon">🎯</span>
+    <h2>Savings Goals is a Premium Feature</h2>
+    <p>Set targets for your Emergency Fund, Vacation, New Laptop — anything you're saving toward. Track your progress with beautiful visual goal bars.</p>
+    <ul class="pricing-features-preview">
+        <li><span class="check-icon">✓</span> Create unlimited savings goals</li>
+        <li><span class="check-icon">✓</span> Visual progress bars per goal</li>
+        <li><span class="check-icon">✓</span> One-tap deposit to any goal</li>
+        <li><span class="check-icon">✓</span> Goals preview on your dashboard</li>
+    </ul>
+    <a href="{{ url_for('pricing') }}" class="btn-upgrade" style="font-size:1rem; padding:0.75rem 1.5rem;">⭐ Unlock Premium — $4.99/mo</a>
+    <div style="margin-top:0.85rem;"><a href="{{ url_for('dashboard') }}" style="color:var(--text-muted);font-size:0.85rem;">Back to Dashboard</a></div>
+</div>
+{% else %}
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-title">
+        <span>🎯 Create Target Savings Goal</span>
+    </div>
+    <form method="POST" action="/add-goal">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="title">Goal Title *</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Emergency Fund, New Laptop, Vacation" required>
+            </div>
+            <div class="form-group">
+                <label for="target_amount">Target Amount ($) *</label>
+                <input type="number" step="0.01" min="1" id="target_amount" name="target_amount" class="form-control" placeholder="1000.00" required>
+            </div>
+            <div class="form-group">
+                <label for="current_amount">Current Saved Amount ($)</label>
+                <input type="number" step="0.01" min="0" id="current_amount" name="current_amount" class="form-control" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" name="category" class="form-control">
+                    <option value="Emergency Fund">Emergency Fund</option>
+                    <option value="Vacation">Vacation / Travel</option>
+                    <option value="Tech & Electronics">Tech & Electronics</option>
+                    <option value="Vehicle">Vehicle / Car</option>
+                    <option value="Investments">Investments</option>
+                    <option value="Other Goal">Other Goal</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="target_date">Target Completion Date</label>
+                <input type="date" id="target_date" name="target_date" class="form-control">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn-income">Create Goal</button>
+        </div>
+    </form>
+</div>
+
+<div class="metrics-grid">
+    {% for g in goals %}
+    {% set pct = ((g.current_amount / g.target_amount) * 100)|round|int if g.target_amount > 0 else 0 %}
+    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+            <div class="card-title" style="margin-bottom: 0.5rem;">
+                <span>{{ g.title }}</span>
+                <span class="badge badge-salary">{{ g.category }}</span>
+            </div>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
+                ${{ "%.2f"|format(g.current_amount) }} <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 400;">/ ${{ "%.2f"|format(g.target_amount) }}</span>
+            </div>
+            <div class="progress-bar-bg" style="margin-bottom: 0.75rem;">
+                <div class="progress-bar-fill progress-emerald" style="width: {{ 100 if pct > 100 else pct }}%;"></div>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Progress: {{ pct }}% complete</div>
+        </div>
+
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+            <form action="{{ url_for('update_goal', id=g.id) }}" method="POST" style="display: flex; gap: 0.5rem; flex: 1; margin-right: 0.5rem;">
+                <input type="number" step="0.01" name="deposit_amount" class="form-control" placeholder="+$ Deposit" style="padding: 0.35rem 0.5rem; font-size: 0.8rem;">
+                <button type="submit" class="btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;">Add</button>
+            </form>
+            <form action="{{ url_for('delete_goal', id=g.id) }}" method="POST" onsubmit="return confirm('Delete this savings goal?');">
+                <button type="submit" class="btn-danger" style="padding: 0.35rem 0.5rem; font-size: 0.8rem;">Delete</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="card full-width">
+        <div class="empty-state">
+            <p>No active savings goals. Create one above to track your emergency fund or vacation savings!</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
