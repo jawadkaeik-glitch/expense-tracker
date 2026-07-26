@@ -38,9 +38,10 @@
             <div class="metric-icon icon-purple">🎯</div>
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 0.4rem; flex-wrap: wrap;">
-            <div class="metric-value" style="font-size: 1.35rem; font-weight: 800;">
-                {{ stats.health_score }}<span style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">/100</span>
+            <div class="metric-value" style="font-size: 1.85rem; font-weight: 800; line-height: 1;">
+                {{ stats.health_score }}<span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); opacity: 0.8;">/100</span>
             </div>
+
             <span class="health-badge health-{{ stats.health_color }}" style="padding: 0.3rem 0.75rem; font-size: 0.78rem; border-radius: 20px; white-space: nowrap;">
                 Grade {{ stats.health_grade }} &nbsp;·&nbsp; {{ stats.health_label }}
             </span>
