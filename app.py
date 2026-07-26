@@ -451,8 +451,11 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
     return {
         'total_income':      round(month_income, 2),
         'total_expense':     round(month_expense, 2),
+        'income_count':      len(monthly_incomes) if monthly_incomes else len(incomes),
+        'expense_count':     len(monthly_expenses) if monthly_expenses else len(expenses),
         'all_time_income':   round(total_income, 2),
         'all_time_expense':  round(total_expense, 2),
+
         'net_balance':       round(net_balance, 2),
         'savings_rate':      savings_rate,
         'daily_safe':        daily_safe,
