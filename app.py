@@ -13,13 +13,16 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
+import secrets
+
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "kashflow-secret-2026")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
 db = SQLAlchemy(app)
 
@@ -370,9 +373,10 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
     monthly_expenses = [e for e in expenses if e.date and e.date.startswith(current_mo_str)]
     monthly_incomes  = [i for i in incomes  if i.date and i.date.startswith(current_mo_str)]
 
-    # Use current month if available, fallback to total if new user
-    month_expense = sum(e.amount for e in monthly_expenses) if monthly_expenses else sum(e.amount for e in expenses)
-    month_income  = sum(i.amount for i in monthly_incomes)  if monthly_incomes  else sum(i.amount for i in incomes)
+    # Calculate current month's expenses and incomes
+    month_expense = sum(e.amount for e in monthly_expenses)
+    month_income  = sum(i.amount for i in monthly_incomes)
+
 
     total_expense = sum(e.amount for e in expenses)
     total_income  = sum(i.amount for i in incomes)
@@ -763,11 +767,11 @@ def delete_income(id):
 
 @app.route("/bills")
 @login_required
-@premium_required
 def list_bills():
     return render_template("bills.html",
         bills=Bill.query.filter_by(user_id=current_uid()).order_by(Bill.due_date.asc()).all(),
         today=datetime.now().strftime('%Y-%m-%d'))
+
 
 @app.route("/add-bill", methods=["POST"])
 @login_required
@@ -812,11 +816,11 @@ def delete_bill(id):
 
 @app.route("/goals")
 @login_required
-@premium_required
 def list_goals():
     return render_template("goals.html",
         goals=Goal.query.filter_by(user_id=current_uid()).all(),
         today=datetime.now().strftime('%Y-%m-%d'))
+
 
 @app.route("/add-goal", methods=["POST"])
 @login_required
@@ -866,8 +870,8 @@ def delete_goal(id):
 
 @app.route("/budgets")
 @login_required
-@premium_required
 def list_budgets():
+
     uid   = current_uid()
     month = datetime.now().strftime('%Y-%m')
     budgets  = Budget.query.filter_by(user_id=uid, month=month).all()
@@ -1071,7 +1075,8 @@ def upgrade():
 @app.route("/downgrade", methods=["GET", "POST"])
 @login_required
 def downgrade():
-    return redirect(url_for("cancel_subscription"), code=302)
+    return cancel_subscription()
+
 
 
 @app.route("/export-csv")
