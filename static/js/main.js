@@ -313,27 +313,95 @@ function initCharts() {
     });
   }
 
-  // Comparison Bar Chart (Income vs Expense vs Net Savings)
+  // Comparison Bar Chart (Income vs Expense 6-Month Trend & Summary)
   if (comparisonCanvas && window.chartComparisonData) {
     const ctx = comparisonCanvas.getContext('2d');
+    const compData = window.chartComparisonData;
+
+    let datasets = [];
+    if (compData.income && compData.expenses) {
+      datasets = [
+        {
+          label: 'Income ($)',
+          data: compData.income,
+          backgroundColor: 'rgba(16, 185, 129, 0.75)',
+          borderColor: '#10b981',
+          borderWidth: 1,
+          borderRadius: 6
+        },
+        {
+          label: 'Expenses ($)',
+          data: compData.expenses,
+          backgroundColor: 'rgba(239, 68, 68, 0.75)',
+          borderColor: '#ef4444',
+          borderWidth: 1,
+          borderRadius: 6
+        }
+      ];
+    } else {
+      datasets = [{
+        label: 'Amount ($)',
+        data: compData.data || [],
+        backgroundColor: [
+          'rgba(16, 185, 129, 0.75)',
+          'rgba(239, 68, 68, 0.75)',
+          'rgba(99, 102, 241, 0.75)'
+        ],
+        borderColor: ['#10b981', '#ef4444', '#6366f1'],
+        borderWidth: 1,
+        borderRadius: 8
+      }];
+    }
+
     window.comparisonChart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: window.chartComparisonData.labels,
+        labels: compData.labels || [],
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: compData.income ? true : false,
+            position: 'top',
+            labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() }
+          }
+        }
+      }
+    });
+  }
+
+  // Trend Line Chart (Monthly Expense History)
+  const trendCanvas = document.getElementById('trendChart');
+  if (trendCanvas && window.chartTrendData) {
+    const ctx = trendCanvas.getContext('2d');
+    const trendData = window.chartTrendData;
+    window.trendChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: trendData.labels || [],
         datasets: [{
-          data: window.chartComparisonData.data,
-          backgroundColor: [
-            'rgba(16, 185, 129, 0.75)',
-            'rgba(239, 68, 68, 0.75)',
-            'rgba(99, 102, 241, 0.75)'
-          ],
-          borderColor: [
-            '#10b981',
-            '#ef4444',
-            '#6366f1'
-          ],
-          borderWidth: 1,
-          borderRadius: 8
+          label: 'Expenses ($)',
+          data: trendData.expenses || trendData.data || [],
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.15)',
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2,
+          pointRadius: 4
         }]
       },
       options: {
@@ -343,16 +411,21 @@ function initCharts() {
           legend: { display: false }
         },
         scales: {
-          x: { grid: { display: false } },
+          x: {
+            grid: { display: false },
+            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() }
+          },
           y: {
             beginAtZero: true,
-            grid: { color: 'rgba(255,255,255,0.05)' }
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() }
           }
         }
       }
     });
   }
 }
+
 
 /* ===== FLOATING ACTION BUTTON ===== */
 function initFAB() {

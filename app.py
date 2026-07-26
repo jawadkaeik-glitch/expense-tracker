@@ -168,6 +168,19 @@ def is_premium():
     user = get_current_user()
     return user.is_premium if user else False
 
+def premium_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('user_id'):
+            flash("Please log in to access KashFlow.", "error")
+            return redirect(url_for('login'))
+        if not is_premium():
+            flash("This feature requires a Premium PRO subscription. Upgrade to unlock full access!", "error")
+            return redirect(url_for('pricing'))
+        return f(*args, **kwargs)
+    return decorated
+
+
 @app.context_processor
 def inject_globals():
     user = get_current_user()
@@ -344,10 +357,20 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
         current_month = datetime.now().strftime('%Y-%m')
         budgets = Budget.query.filter_by(user_id=current_uid(), month=current_month).all()
 
+    # Filter to current month for monthly dashboard calculations
+    current_mo_str = datetime.now().strftime('%Y-%m')
+    monthly_expenses = [e for e in expenses if e.date and e.date.startswith(current_mo_str)]
+    monthly_incomes  = [i for i in incomes  if i.date and i.date.startswith(current_mo_str)]
+
+    # Use current month if available, fallback to total if new user
+    month_expense = sum(e.amount for e in monthly_expenses) if monthly_expenses else sum(e.amount for e in expenses)
+    month_income  = sum(i.amount for i in monthly_incomes)  if monthly_incomes  else sum(i.amount for i in incomes)
+
     total_expense = sum(e.amount for e in expenses)
     total_income  = sum(i.amount for i in incomes)
-    net_balance   = total_income - total_expense
-    savings_rate  = round((net_balance / total_income * 100), 1) if total_income > 0 else 0.0
+
+    net_balance   = month_income - month_expense
+    savings_rate  = round((net_balance / month_income * 100), 1) if month_income > 0 else 0.0
     days_in_month = calendar.monthrange(datetime.now().year, datetime.now().month)[1]
     today_day     = datetime.now().day
     days_left     = max(1, days_in_month - today_day)
@@ -357,8 +380,8 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
     daily_safe = round(safe_net / days_left, 2) if days_left > 0 else 0.0
 
     score = 50
-    if total_income > 0:
-        ratio = total_expense / total_income
+    if month_income > 0:
+        ratio = month_expense / month_income
         if   ratio <= 0.5:  score = 95
         elif ratio <= 0.7:  score = 80
         elif ratio <= 0.85: score = 65
@@ -367,20 +390,20 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
     if net_balance > 0 and savings_rate >= 20: score = min(100, score + 5)
     if unpaid_bills_total > 0: score = max(10, score - 5)
 
-    if   score >= 80: health_label, health_color = 'Excellent 🌟', '#10b981'
-    elif score >= 65: health_label, health_color = 'Good 👍',      '#6366f1'
-    elif score >= 45: health_label, health_color = 'Fair ⚠️',      '#f59e0b'
-    else:             health_label, health_color = 'Needs Work 🚨', '#ef4444'
+    if   score >= 85: health_grade, health_label, health_color_class, health_color_hex = 'A+', 'Excellent 🌟', 'emerald', '#10b981'
+    elif score >= 70: health_grade, health_label, health_color_class, health_color_hex = 'B',  'Good 👍',      'indigo',  '#6366f1'
+    elif score >= 50: health_grade, health_label, health_color_class, health_color_hex = 'C',  'Fair ⚠️',      'amber',   '#f59e0b'
+    else:             health_grade, health_label, health_color_class, health_color_hex = 'D',  'Needs Work 🚨','rose',    '#ef4444'
 
     exp_cat_totals = defaultdict(float)
-    for e in expenses:
+    for e in (monthly_expenses or expenses):
         exp_cat_totals[e.category or 'General'] += e.amount
 
     needs_spent = sum(exp_cat_totals.get(c, 0) for c in NEEDS_CATEGORIES)
     wants_spent = sum(exp_cat_totals.get(c, 0) for c in WANTS_CATEGORIES)
-    needs_pct   = round((needs_spent / total_income * 100), 1) if total_income > 0 else 0.0
-    wants_pct   = round((wants_spent / total_income * 100), 1) if total_income > 0 else 0.0
-    savings_pct = round((max(0, net_balance) / total_income * 100), 1) if total_income > 0 else 0.0
+    needs_pct   = round((needs_spent / month_income * 100), 1) if month_income > 0 else 0.0
+    wants_pct   = round((wants_spent / month_income * 100), 1) if month_income > 0 else 0.0
+    savings_pct = round((max(0, net_balance) / month_income * 100), 1) if month_income > 0 else 0.0
 
     sorted_cats = sorted(exp_cat_totals.items(), key=lambda x: x[1], reverse=True)
     top_cats    = sorted_cats[:6]
@@ -392,11 +415,11 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
         while m <= 0: m += 12; y -= 1
         months_labels.append(datetime(y, m, 1).strftime('%b'))
         mo = f"{y}-{m:02d}"
-        inc_data.append(round(sum(x.amount for x in incomes  if x.date.startswith(mo)), 2))
-        exp_data.append(round(sum(x.amount for x in expenses if x.date.startswith(mo)), 2))
+        inc_data.append(round(sum(x.amount for x in incomes  if x.date and x.date.startswith(mo)), 2))
+        exp_data.append(round(sum(x.amount for x in expenses if x.date and x.date.startswith(mo)), 2))
 
     insights, category_warnings = [], []
-    if total_income == 0:
+    if month_income == 0 and total_income == 0:
         insights.append({'type': 'tip', 'icon': '💡', 'title': 'Add Your Income First',
             'message': 'Start by adding your salary or income sources to see your financial health score.',
             'action': 'Click "+ Income" at the top right to get started.'})
@@ -414,7 +437,7 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
                 'message': f'You are saving {savings_rate}% of your income this month.',
                 'action': 'Keep it up! Consider investing some savings for long-term growth.'})
         for cat, amt in sorted_cats[:3]:
-            pct = round((amt / total_income) * 100, 1)
+            pct = round((amt / month_income) * 100, 1) if month_income > 0 else 0.0
             if pct > 30:
                 category_warnings.append({'category': cat, 'amount': round(amt, 2), 'pct': pct})
                 insights.append({'type': 'warning', 'icon': '📊', 'title': f'High {cat} Spending',
@@ -426,19 +449,23 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
                 'action': 'Stick to this daily limit to finish the month in the green.'})
 
     return {
-        'total_income':    round(total_income, 2),
-        'total_expense':   round(total_expense, 2),
-        'net_balance':     round(net_balance, 2),
-        'savings_rate':    savings_rate,
-        'daily_safe':      daily_safe,
-        'days_left':       days_left,
-        'health_score':    score,
-        'health_label':    health_label,
-        'health_color':    health_color,
-        'unpaid_bills':    round(unpaid_bills_total, 2),
-        'income_chart':    {'labels': [c for c,_ in top_cats], 'data': [round(a,2) for _,a in top_cats]},
-        'comparison_chart':{'labels': months_labels, 'income': inc_data, 'expenses': exp_data},
-        'rule_50_30_20':   {
+        'total_income':      round(month_income, 2),
+        'total_expense':     round(month_expense, 2),
+        'all_time_income':   round(total_income, 2),
+        'all_time_expense':  round(total_expense, 2),
+        'net_balance':       round(net_balance, 2),
+        'savings_rate':      savings_rate,
+        'daily_safe':        daily_safe,
+        'days_left':         days_left,
+        'health_score':      score,
+        'health_grade':      health_grade,
+        'health_label':      health_label,
+        'health_color':      health_color_class,
+        'health_color_hex':  health_color_hex,
+        'unpaid_bills':      round(unpaid_bills_total, 2),
+        'income_chart':      {'labels': [c for c,_ in top_cats], 'data': [round(a,2) for _,a in top_cats]},
+        'comparison_chart':  {'labels': months_labels, 'income': inc_data, 'expenses': exp_data, 'data': [round(month_income, 2), round(month_expense, 2), round(max(0, net_balance), 2)]},
+        'rule_50_30_20':     {
             'needs_pct':   min(100, max(0, needs_pct)),
             'wants_pct':   min(100, max(0, wants_pct)),
             'savings_pct': min(100, max(0, savings_pct)),
@@ -449,8 +476,9 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
         'insights':          insights,
         'category_warnings': category_warnings,
         'budget_limits':     _compute_budget_usage(budgets, exp_cat_totals),
-        'affiliate_recs':    _get_affiliate_recommendations(savings_rate, net_balance, total_income, goals)
+        'affiliate_recs':    _get_affiliate_recommendations(savings_rate, net_balance, month_income, goals)
     }
+
 
 def _compute_budget_usage(budgets, exp_cat_totals):
     results = []
@@ -633,8 +661,9 @@ def edit_expense(id):
 @login_required
 def delete_expense(id):
     uid = current_uid()
-    expense = Expense.query.filter((Expense.id == id) & ((Expense.user_id == uid) | (Expense.user_id == None))).first_or_404()
+    expense = Expense.query.filter_by(id=id, user_id=uid).first_or_404()
     desc = expense.description
+
     db.session.delete(expense); db.session.commit()
     flash(f"Expense '{desc}' deleted.", "success")
     return redirect(request.referrer or url_for("list_expenses"))
@@ -723,6 +752,7 @@ def delete_income(id):
 
 @app.route("/bills")
 @login_required
+@premium_required
 def list_bills():
     return render_template("bills.html",
         bills=Bill.query.filter_by(user_id=current_uid()).order_by(Bill.due_date.asc()).all(),
@@ -730,6 +760,7 @@ def list_bills():
 
 @app.route("/add-bill", methods=["POST"])
 @login_required
+@premium_required
 def add_bill():
     name    = request.form.get("name", "").strip()
     amt_s   = request.form.get("amount", "").strip()
@@ -748,6 +779,7 @@ def add_bill():
 
 @app.route("/toggle-bill/<int:id>", methods=["POST"])
 @login_required
+@premium_required
 def toggle_bill(id):
     bill = Bill.query.filter_by(id=id, user_id=current_uid()).first_or_404()
     bill.is_paid = not bill.is_paid
@@ -757,6 +789,7 @@ def toggle_bill(id):
 
 @app.route("/delete-bill/<int:id>", methods=["POST"])
 @login_required
+@premium_required
 def delete_bill(id):
     bill = Bill.query.filter_by(id=id, user_id=current_uid()).first_or_404()
     db.session.delete(bill); db.session.commit()
@@ -768,6 +801,7 @@ def delete_bill(id):
 
 @app.route("/goals")
 @login_required
+@premium_required
 def list_goals():
     return render_template("goals.html",
         goals=Goal.query.filter_by(user_id=current_uid()).all(),
@@ -775,6 +809,7 @@ def list_goals():
 
 @app.route("/add-goal", methods=["POST"])
 @login_required
+@premium_required
 def add_goal():
     title   = request.form.get("title", "").strip()
     tgt_s   = request.form.get("target_amount", "").strip()
@@ -794,6 +829,7 @@ def add_goal():
 
 @app.route("/update-goal/<int:id>", methods=["POST"])
 @login_required
+@premium_required
 def update_goal(id):
     goal = Goal.query.filter_by(id=id, user_id=current_uid()).first_or_404()
     try:
@@ -807,6 +843,7 @@ def update_goal(id):
 
 @app.route("/delete-goal/<int:id>", methods=["POST"])
 @login_required
+@premium_required
 def delete_goal(id):
     goal = Goal.query.filter_by(id=id, user_id=current_uid()).first_or_404()
     db.session.delete(goal); db.session.commit()
@@ -818,6 +855,7 @@ def delete_goal(id):
 
 @app.route("/budgets")
 @login_required
+@premium_required
 def list_budgets():
     uid   = current_uid()
     month = datetime.now().strftime('%Y-%m')
@@ -830,7 +868,9 @@ def list_budgets():
 
 @app.route("/add-budget", methods=["POST"])
 @login_required
+@premium_required
 def add_budget():
+
     uid   = current_uid()
     cat   = request.form.get("category", "").strip()
     lim_s = request.form.get("monthly_limit", "").strip()
@@ -1017,18 +1057,16 @@ def cancel_subscription():
 def upgrade():
     return redirect(url_for("pricing"))
 
-@app.route("/downgrade")
+@app.route("/downgrade", methods=["GET", "POST"])
 @login_required
 def downgrade():
-    return redirect(url_for("cancel_subscription"), code=307)
+    return redirect(url_for("cancel_subscription"), code=302)
 
 
 @app.route("/export-csv")
 @login_required
+@premium_required
 def export_csv():
-    if not is_premium():
-        flash("CSV Export is a Premium feature. Upgrade to unlock!", "error")
-        return redirect(url_for("pricing"))
     uid      = current_uid()
     expenses = Expense.query.filter_by(user_id=uid).order_by(Expense.date.desc()).all()
     incomes  = Income.query.filter_by(user_id=uid).order_by(Income.date.desc()).all()
@@ -1045,7 +1083,17 @@ def export_csv():
         headers={'Content-Disposition': f'attachment;filename={fn}'})
 
 
-if __name__ == "__main__":
+# Initialize database and migrations on startup (for Gunicorn & local dev)
+with app.app_context():
     init_db()
-    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+
+if __name__ == "__main__":
+    debug_mode = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
+    app.run(
+        host=os.environ.get("FLASK_HOST", "0.0.0.0"),
+        port=int(os.environ.get("PORT", 5000)),
+        debug=debug_mode,
+        use_reloader=False
+    )
+
 
