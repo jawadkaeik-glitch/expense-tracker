@@ -14,12 +14,26 @@ document.addEventListener('DOMContentLoaded', () => {
 function initUserDropdown() {
   const btn = document.getElementById('userAvatarBtn');
   if (!btn) return;
+
   btn.addEventListener('click', (e) => {
+    if (e.target.closest('.user-dropdown-item')) return;
     e.stopPropagation();
     btn.classList.toggle('open');
   });
-  document.addEventListener('click', () => btn.classList.remove('open'));
+
+  document.addEventListener('click', (e) => {
+    if (!btn.contains(e.target)) {
+      btn.classList.remove('open');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      btn.classList.remove('open');
+    }
+  });
 }
+
 
 
 /* Theme Toggle */
