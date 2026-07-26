@@ -104,53 +104,61 @@ class Budget(db.Model):
 def init_db():
     """Initializes tables and migrates existing SQLite tables safely."""
     with app.app_context():
-        db.create_all()
         try:
-            db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
-            conn = sqlite3.connect(app.instance_path + '/expenses.db' if 'instance' not in db_path else db_path)
-            cursor = conn.cursor()
+            db.create_all()
+            db_file = os.path.join(app.root_path, 'instance', 'expenses.db')
+            if not os.path.exists(db_file):
+                db_file = os.path.join(app.root_path, 'expenses.db')
 
-            cursor.execute("PRAGMA table_info(expense)")
-            exp_cols = [r[1] for r in cursor.fetchall()]
-            for col, defn in [('category', "VARCHAR(50) DEFAULT 'General'"), ('date', "VARCHAR(10) DEFAULT ''"),
-                               ('payment_method', "VARCHAR(50) DEFAULT 'Card'"), ('notes', "TEXT DEFAULT ''"),
-                               ('user_id', "INTEGER")]:
-                if col not in exp_cols:
-                    cursor.execute(f"ALTER TABLE expense ADD COLUMN {col} {defn}")
+            if os.path.exists(db_file):
+                conn = sqlite3.connect(db_file)
+                cursor = conn.cursor()
 
-            cursor.execute("PRAGMA table_info(income)")
-            inc_cols = [r[1] for r in cursor.fetchall()]
-            for col, defn in [('source', "VARCHAR(50) DEFAULT 'Bank Transfer'"), ('notes', "TEXT DEFAULT ''"),
-                               ('user_id', "INTEGER")]:
-                if col not in inc_cols:
-                    cursor.execute(f"ALTER TABLE income ADD COLUMN {col} {defn}")
+                cursor.execute("PRAGMA table_info(expense)")
+                exp_cols = [r[1] for r in cursor.fetchall()]
+                for col, defn in [('category', "VARCHAR(50) DEFAULT 'General'"), ('date', "VARCHAR(10) DEFAULT ''"),
+                                   ('payment_method', "VARCHAR(50) DEFAULT 'Card'"), ('notes', "TEXT DEFAULT ''"),
+                                   ('user_id', "INTEGER")]:
+                    if col not in exp_cols:
+                        cursor.execute(f"ALTER TABLE expense ADD COLUMN {col} {defn}")
 
-            for table in ['bill', 'goal', 'budget']:
-                cursor.execute(f"PRAGMA table_info({table})")
-                cols = [r[1] for r in cursor.fetchall()]
-                if 'user_id' not in cols:
-                    cursor.execute(f"ALTER TABLE {table} ADD COLUMN user_id INTEGER")
+                cursor.execute("PRAGMA table_info(income)")
+                inc_cols = [r[1] for r in cursor.fetchall()]
+                for col, defn in [('source', "VARCHAR(50) DEFAULT 'Bank Transfer'"), ('notes', "TEXT DEFAULT ''"),
+                                   ('user_id', "INTEGER")]:
+                    if col not in inc_cols:
+                        cursor.execute(f"ALTER TABLE income ADD COLUMN {col} {defn}")
 
-            # Ensure User stripe columns
-            cursor.execute("PRAGMA table_info(user)")
-            user_cols = [r[1] for r in cursor.fetchall()]
-            for col, defn in [('stripe_customer_id', "VARCHAR(255)"),
-                               ('stripe_subscription_id', "VARCHAR(255)")]:
-                if col not in user_cols:
-                    cursor.execute(f"ALTER TABLE user ADD COLUMN {col} {defn}")
+                for table in ['bill', 'goal', 'budget']:
+                    cursor.execute(f"PRAGMA table_info({table})")
+                    cols = [r[1] for r in cursor.fetchall()]
+                    if 'user_id' not in cols:
+                        cursor.execute(f"ALTER TABLE {table} ADD COLUMN user_id INTEGER")
 
-            conn.commit()
-            conn.close()
+                cursor.execute("PRAGMA table_info(user)")
+                user_cols = [r[1] for r in cursor.fetchall()]
+                for col, defn in [('stripe_customer_id', "VARCHAR(255)"),
+                                   ('stripe_subscription_id', "VARCHAR(255)")]:
+                    if col not in user_cols:
+                        cursor.execute(f"ALTER TABLE user ADD COLUMN {col} {defn}")
+
+                conn.commit()
+                conn.close()
         except Exception as e:
-            print("DB migration:", e)
-
+            print("DB migration check:", e)
 
 
 # ── AUTH HELPERS ───────────────────────────────────────────────
 
 def get_current_user():
     uid = session.get('user_id')
-    return User.query.get(uid) if uid else None
+    if uid:
+        try:
+            return db.session.get(User, uid)
+        except Exception:
+            return None
+    return None
+
 
 def current_uid():
     return session.get('user_id')
