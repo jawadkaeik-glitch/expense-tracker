@@ -29,35 +29,7 @@
 </div>
 {% endif %}
 
-<!-- 🔥 STREAK & LEVEL PROGRESSION GAMIFICATION BANNER -->
 
-<section style="margin-bottom: 1.5rem;">
-    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap; box-shadow: var(--shadow-md);">
-        <div style="display: flex; align-items: center; gap: 0.85rem;">
-            <div style="font-size: 1.7rem; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.4rem 0.65rem; border-radius: 12px;">🔥</div>
-            <div>
-                <div style="font-size: 1rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
-                    <span>{{ stats.streak }} Day Streak!</span>
-                    <span style="font-size: 0.72rem; padding: 0.15rem 0.5rem; background: rgba(16,185,129,0.15); color: #34d399; border-radius: 9999px; border: 1px solid rgba(16,185,129,0.3);">Active</span>
-                </div>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem;">
-                    {% if stats.streak > 0 %}Duolingo effect in motion! Keep logging daily to build your momentum.🚀{% else %}Log an expense or income today to start your streak!⚡{% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Level Up Progression -->
-        <div style="min-width: 200px; flex: 1; max-width: 300px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-main);">
-                <span>Level Grade: {{ stats.health_grade }}</span>
-                <span>Next Level: {{ stats.next_grade }}</span>
-            </div>
-            <div class="progress-bar-bg" style="height: 10px; border-radius: 9999px; overflow: hidden; background: rgba(255,255,255,0.08);">
-                <div class="progress-bar-fill progress-emerald" style="width: {{ stats.grade_progress_pct }}%; height: 100%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- 📱 MOBILE HERO METRIC (LEAD WITH ONE BIG NUMBER) -->
 <section class="mobile-only-hero" style="margin-bottom: 1.5rem;">
