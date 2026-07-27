@@ -262,9 +262,10 @@ header {
   overflow: hidden;
 }
 
-.user-avatar-btn.open .user-dropdown {
+.user-dropdown.show {
   display: flex !important;
 }
+
 
 .user-dropdown-item {
   display: flex;

@@ -13,26 +13,40 @@ document.addEventListener('DOMContentLoaded', () => {
 /* User Avatar Dropdown */
 function initUserDropdown() {
   const btn = document.getElementById('userAvatarBtn');
-  if (!btn) return;
+  const dropdown = document.getElementById('userDropdown');
+  if (!btn || !dropdown) return;
 
   btn.addEventListener('click', (e) => {
-    if (e.target.closest('.user-dropdown-item')) return;
     e.stopPropagation();
-    btn.classList.toggle('open');
+    const isOpen = dropdown.classList.contains('show');
+    if (isOpen) {
+      dropdown.classList.remove('show');
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    } else {
+      dropdown.classList.add('show');
+      btn.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
   });
 
   document.addEventListener('click', (e) => {
-    if (!btn.contains(e.target)) {
+    if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove('show');
       btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
     }
   });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      dropdown.classList.remove('show');
       btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
     }
   });
 }
+
 
 
 
