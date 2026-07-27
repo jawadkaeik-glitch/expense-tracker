@@ -19,35 +19,48 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.85rem;
-  background: rgba(15, 23, 42, 0.82);
-  backdrop-filter: blur(4px);
+  gap: 0.75rem;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.95) 100%);
+  backdrop-filter: blur(8px);
   z-index: 10;
   padding: 2rem;
   text-align: center;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(234, 179, 8, 0.35);
+  border: 1.5px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
   transition: all 0.3s ease;
 }
 .lock-overlay .lock-icon-lg { font-size: 2.4rem; animation: pulse 2s infinite; }
-.lock-overlay h3 { font-size: 1.15rem; font-weight: 800; color: #fbbf24; }
-.lock-overlay p  { font-size: 0.88rem; color: #e2e8f0; max-width: 320px; font-weight: 500; }
-
-[data-theme="light"] .lock-overlay {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(217, 119, 6, 0.4);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+.lock-overlay h3 {
+  font-size: 1.2rem !important;
+  font-weight: 800 !important;
+  color: #fbbf24 !important;
+  -webkit-text-fill-color: #fbbf24 !important;
+  margin: 0 !important;
 }
-
-[data-theme="light"] .lock-overlay h3 {
-  color: #b45309;
+.lock-overlay p {
+  font-size: 0.9rem !important;
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+  max-width: 360px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
 }
-
-[data-theme="light"] .lock-overlay p {
-  color: #334155;
+.lock-overlay .btn-upgrade {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 800 !important;
+  padding: 0.65rem 1.3rem !important;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4) !important;
+  text-decoration: none !important;
+  border-radius: var(--radius-sm) !important;
+  margin-top: 0.25rem !important;
 }
 
 @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+
 
 
 /* ===================== PRO BADGE & PREMIUM HEADER ===================== */
