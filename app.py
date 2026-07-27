@@ -19,14 +19,17 @@ import secrets
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "kashflow-persistent-secret-key-prod-2026")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=365)
+
 if os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RAILWAY_ENVIRONMENT'):
     app.config['SESSION_COOKIE_SECURE'] = True
+
 
 
 
