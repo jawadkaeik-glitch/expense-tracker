@@ -178,7 +178,9 @@ def current_uid():
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not session.get('user_id'):
+        user = get_current_user()
+        if not user:
+            session.clear()
             flash("Please log in to access KashFlow.", "error")
             return redirect(url_for('login'))
         return f(*args, **kwargs)
@@ -191,7 +193,9 @@ def is_premium():
 def premium_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not session.get('user_id'):
+        user = get_current_user()
+        if not user:
+            session.clear()
             flash("Please log in to access KashFlow.", "error")
             return redirect(url_for('login'))
         if not is_premium():
@@ -211,19 +215,21 @@ def inject_globals():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if session.get('user_id'):
+    if get_current_user():
         return redirect(url_for('dashboard'))
     if request.method == "POST":
         email    = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         user = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password_hash, password):
+            session.clear()
             session['user_id'] = user.id
             session.permanent = True
             flash(f"Welcome back, {user.name}! 👋", "success")
             return redirect(url_for('dashboard'))
         flash("Invalid email or password. Please try again.", "error")
     return render_template('login.html')
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
