@@ -933,7 +933,11 @@ def pricing():
 @login_required
 def create_checkout_session():
     user = get_current_user()
+    if not user:
+        flash("Please log in to continue.", "error")
+        return redirect(url_for("login"))
     cycle = request.form.get("cycle", "monthly")
+
 
     # Fallback: if Stripe is not configured, use demo mode
     if not STRIPE_SECRET_KEY or not STRIPE_PRICE_ID:
