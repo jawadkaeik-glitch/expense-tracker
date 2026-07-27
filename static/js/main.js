@@ -8,7 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initAdvancedToggles();
   setDefaultDates();
   initUserDropdown();
+  initQuickChips();
+  initRepeatLastSpend();
+  initSwipeActions();
 });
+
 
 /* User Avatar Dropdown */
 function initUserDropdown() {
@@ -549,3 +553,91 @@ function setDefaultDates() {
     if (el && !el.value) el.value = today;
   });
 }
+
+/* ===== QUICK EMOJI CATEGORY CHIPS (<5s LOGGING) ===== */
+function initQuickChips() {
+  const chips = document.querySelectorAll('.quick-chip-btn');
+  const catSelect = document.getElementById('modalCategory');
+  const descInput = document.getElementById('modalDescription');
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      const cat = chip.getAttribute('data-cat');
+      const desc = chip.getAttribute('data-desc');
+
+      if (catSelect && cat) {
+        catSelect.value = cat;
+      }
+      if (descInput && desc) {
+        descInput.value = desc;
+      }
+    });
+  });
+}
+
+/* ===== REPEAT LAST SPEND (1-TAP LOGGING) ===== */
+function initRepeatLastSpend() {
+  const repeatBtn = document.getElementById('repeatLastSpendBtn');
+  if (!repeatBtn) return;
+
+  repeatBtn.addEventListener('click', () => {
+    const desc = repeatBtn.getAttribute('data-desc');
+    const amt = repeatBtn.getAttribute('data-amt');
+    const cat = repeatBtn.getAttribute('data-cat');
+
+    const descInput = document.getElementById('modalDescription');
+    const amtInput = document.getElementById('modalAmount');
+    const catSelect = document.getElementById('modalCategory');
+
+    if (descInput && desc) descInput.value = desc;
+    if (amtInput && amt) amtInput.value = amt;
+    if (catSelect && cat) catSelect.value = cat;
+  });
+}
+
+/* ===== MOBILE TOUCH SWIPE GESTURES ===== */
+function initSwipeActions() {
+  const rows = document.querySelectorAll('.data-row');
+
+  rows.forEach(row => {
+    let startX = 0;
+    let currentX = 0;
+
+    row.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+    }, { passive: true });
+
+    row.addEventListener('touchmove', (e) => {
+      currentX = e.touches[0].clientX;
+      const diffX = currentX - startX;
+
+      if (Math.abs(diffX) > 20 && Math.abs(diffX) < 120) {
+        row.style.transform = `translateX(${diffX}px)`;
+      }
+    }, { passive: true });
+
+    row.addEventListener('touchend', () => {
+      const diffX = currentX - startX;
+      row.style.transform = 'translateX(0)';
+
+      if (diffX < -70) {
+        // Swipe Left -> Trigger Delete
+        const deleteForm = row.querySelector('form[action*="/delete"]');
+        if (deleteForm && confirm('Delete this item?')) {
+          deleteForm.submit();
+        }
+      } else if (diffX > 70) {
+        // Swipe Right -> Trigger Edit
+        const editBtn = row.querySelector('.edit-modal-btn, .edit-income-modal-btn');
+        if (editBtn) editBtn.click();
+      }
+
+      startX = 0;
+      currentX = 0;
+    });
+  });
+}
+

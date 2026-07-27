@@ -1360,6 +1360,44 @@ header {
   }
 }
 
+/* ===== QUICK CHIP BUTTONS (<5s LOGGING) ===== */
+.quick-chip-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.quick-chip-btn:hover, .quick-chip-btn.active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  transform: translateY(-1px);
+}
+
+/* ===== MOBILE ONLY HERO METRIC ===== */
+.mobile-only-hero {
+  display: none;
+}
+@media (max-width: 768px) {
+  .mobile-only-hero {
+    display: block;
+  }
+}
+
+/* ===== MOBILE TOUCH SWIPE ROW STYLES ===== */
+.data-row {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
+  touch-action: pan-y;
+}
+
+
 
 
 

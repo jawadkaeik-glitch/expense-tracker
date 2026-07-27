@@ -153,6 +153,16 @@
             <button type="button" class="close-modal-btn close-modal-trigger">&times;</button>
         </div>
         <form id="modalExpenseForm" method="POST" action="/add">
+            {% if stats and stats.last_expense %}
+            <button type="button" id="repeatLastSpendBtn" class="btn-secondary" 
+                    data-desc="{{ stats.last_expense.description }}" 
+                    data-amt="{{ stats.last_expense.amount }}" 
+                    data-cat="{{ stats.last_expense.category }}"
+                    style="width: 100%; margin-bottom: 1rem; font-size: 0.82rem; padding: 0.55rem; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08); color: var(--text-main); font-weight: 600; justify-content: center; border-radius: var(--radius-sm);">
+                ⚡ Repeat Last Spend: {{ stats.last_expense.description }} (${{ "%.2f"|format(stats.last_expense.amount) }})
+            </button>
+            {% endif %}
+
             <div class="form-grid">
                 <div class="form-group full-width">
                     <label for="modalDescription">What did you spend on? *</label>
@@ -175,6 +185,20 @@
                     </select>
                 </div>
             </div>
+
+            <!-- Quick Emoji Category Chips for <5s Logging -->
+            <div style="margin-top: 0.75rem; margin-bottom: 1rem;">
+                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.35rem; display: block;">Quick Emoji Chips:</label>
+                <div class="category-chips-grid" style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                    <button type="button" class="quick-chip-btn" data-cat="Food">🍔 Food</button>
+                    <button type="button" class="quick-chip-btn" data-cat="Transportation">🚗 Transport</button>
+                    <button type="button" class="quick-chip-btn" data-cat="Shopping">🛍️ Shopping</button>
+                    <button type="button" class="quick-chip-btn" data-cat="Food" data-desc="Coffee">☕ Coffee</button>
+                    <button type="button" class="quick-chip-btn" data-cat="Utilities">💡 Utilities</button>
+                    <button type="button" class="quick-chip-btn" data-cat="General">📦 General</button>
+                </div>
+            </div>
+
 
             <!-- Advanced toggle -->
             <button type="button" class="advanced-toggle" id="expenseAdvancedToggle">

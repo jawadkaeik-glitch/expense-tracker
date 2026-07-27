@@ -5,7 +5,8 @@ import calendar
 import csv
 import io
 import stripe
-from datetime import datetime
+from datetime import datetime, timedelta
+
 from collections import defaultdict
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, Response, jsonify
@@ -465,6 +466,51 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
                 'message': f'You can safely spend ${daily_safe:.2f}/day for the next {days_left} days.',
                 'action': 'Stick to this daily limit to finish the month in the green.'})
 
+    # ── LOGGING STREAK (DUOLINGO EFFECT) ──
+    dates_logged = set(e.date for e in expenses if e.date).union(i.date for i in incomes if i.date)
+    today_dt = datetime.now().date()
+    streak = 0
+    check_dt = today_dt
+    if check_dt.strftime('%Y-%m-%d') not in dates_logged:
+        check_dt = check_dt - timedelta(days=1)
+
+    while check_dt.strftime('%Y-%m-%d') in dates_logged:
+        streak += 1
+        check_dt -= timedelta(days=1)
+
+    # ── LEVEL & GRADE PROGRESSION ──
+    if score >= 85:
+        next_grade = 'MAX'
+        grade_progress_pct = 100
+    elif score >= 70:
+        next_grade = 'A+'
+        grade_progress_pct = int(((score - 70) / 15) * 100)
+    elif score >= 50:
+        next_grade = 'B'
+        grade_progress_pct = int(((score - 50) / 20) * 100)
+    else:
+        next_grade = 'C'
+        grade_progress_pct = int((score / 50) * 100)
+
+    # ── DYNAMIC DAILY SAFE CONTEXT MSG ──
+    if daily_safe >= 25.0:
+        daily_safe_msg = "You're good for 1 nice meal out 🍔 & coffee!"
+    elif daily_safe >= 10.0:
+        daily_safe_msg = "You're good for 1 more coffee ☕ & snacks today!"
+    elif daily_safe >= 3.0:
+        daily_safe_msg = "You're good for 1 more coffee ☕ today!"
+    elif daily_safe > 0.0:
+        daily_safe_msg = "Stay mindful today to finish the month in green! 🌿"
+    else:
+        daily_safe_msg = "Take a no-spend day today to recharge! 🛡️"
+
+    last_expense = {
+        'description': expenses[0].description,
+        'amount': expenses[0].amount,
+        'category': expenses[0].category or 'General',
+        'payment_method': expenses[0].payment_method or 'Card'
+    } if expenses else None
+
     return {
         'total_income':      round(month_income, 2),
         'total_expense':     round(month_expense, 2),
@@ -476,13 +522,19 @@ def get_overview_stats(expenses, incomes, bills=None, goals=None, budgets=None):
         'net_balance':       round(net_balance, 2),
         'savings_rate':      savings_rate,
         'daily_safe':        daily_safe,
+        'daily_safe_msg':    daily_safe_msg,
         'days_left':         days_left,
         'health_score':      score,
         'health_grade':      health_grade,
         'health_label':      health_label,
         'health_color':      health_color_class,
         'health_color_hex':  health_color_hex,
+        'streak':            streak,
+        'next_grade':        next_grade,
+        'grade_progress_pct':grade_progress_pct,
+        'last_expense':      last_expense,
         'unpaid_bills':      round(unpaid_bills_total, 2),
+
         'income_chart':      {'labels': [c for c,_ in top_cats], 'data': [round(a,2) for _,a in top_cats]},
         'comparison_chart':  {'labels': months_labels, 'income': inc_data, 'expenses': exp_data, 'data': [round(month_income, 2), round(month_expense, 2), round(max(0, net_balance), 2)]},
         'rule_50_30_20':     {
