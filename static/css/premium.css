@@ -20,18 +20,35 @@
   align-items: center;
   justify-content: center;
   gap: 0.85rem;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(2px);
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(4px);
   z-index: 10;
   padding: 2rem;
   text-align: center;
   border-radius: var(--radius-lg);
   border: 1px solid rgba(234, 179, 8, 0.35);
+  transition: all 0.3s ease;
 }
 .lock-overlay .lock-icon-lg { font-size: 2.4rem; animation: pulse 2s infinite; }
-.lock-overlay h3 { font-size: 1.1rem; font-weight: 700; color: #fbbf24; }
-.lock-overlay p  { font-size: 0.84rem; color: var(--text-muted); max-width: 280px; }
+.lock-overlay h3 { font-size: 1.15rem; font-weight: 800; color: #fbbf24; }
+.lock-overlay p  { font-size: 0.88rem; color: #e2e8f0; max-width: 320px; font-weight: 500; }
+
+[data-theme="light"] .lock-overlay {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(217, 119, 6, 0.4);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .lock-overlay h3 {
+  color: #b45309;
+}
+
+[data-theme="light"] .lock-overlay p {
+  color: #334155;
+}
+
 @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+
 
 /* ===================== PRO BADGE & PREMIUM HEADER ===================== */
 .pro-badge {
