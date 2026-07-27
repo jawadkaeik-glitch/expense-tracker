@@ -1,11 +1,22 @@
+# Python & Virtual Environment
 venv/
-__pycache__/
+ENV/
+env/
+.venv/
 *.pyc
-*.pyo
-*.pyd
-.DS_Store
-.env
+__pycache__/
+
+# Database & Instance Data
 instance/
 *.db
-scratch/
-test_*.py
+*.sqlite3
+
+# Environment Variables & Secrets
+.env
+.env.local
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

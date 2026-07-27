@@ -22,6 +22,11 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+if os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RAILWAY_ENVIRONMENT'):
+    app.config['SESSION_COOKIE_SECURE'] = True
+
 
 
 db = SQLAlchemy(app)
@@ -909,7 +914,9 @@ def add_budget():
 
 @app.route("/delete-budget/<int:id>", methods=["POST"])
 @login_required
+@premium_required
 def delete_budget(id):
+
     budget = Budget.query.filter_by(id=id, user_id=current_uid()).first_or_404()
     db.session.delete(budget); db.session.commit()
     flash("Budget limit removed.", "success")
@@ -973,6 +980,11 @@ def stripe_webhook():
     payload = request.get_data(as_text=True)
     sig_header = request.headers.get("Stripe-Signature", "")
 
+    if not STRIPE_WEBHOOK_SECRET:
+        if os.environ.get("FLASK_ENV") == "production" or os.environ.get("RAILWAY_ENVIRONMENT"):
+            print("⚠️ Rejecting unsigned webhook in production mode")
+            return jsonify({"error": "STRIPE_WEBHOOK_SECRET is required in production"}), 400
+
     try:
         if STRIPE_WEBHOOK_SECRET:
             event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
@@ -981,6 +993,7 @@ def stripe_webhook():
     except (ValueError, stripe.SignatureVerificationError) as e:
         print("Webhook signature error:", e)
         return jsonify({"error": "Invalid signature"}), 400
+
 
     event_type = event.get("type", "")
     data_obj = event.get("data", {}).get("object", {})
@@ -1104,7 +1117,8 @@ with app.app_context():
     init_db()
 
 if __name__ == "__main__":
-    debug_mode = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
+    debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+
     app.run(
         host=os.environ.get("FLASK_HOST", "0.0.0.0"),
         port=int(os.environ.get("PORT", 5000)),
