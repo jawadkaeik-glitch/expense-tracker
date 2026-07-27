@@ -83,11 +83,15 @@ header {
   transition: all 0.3s ease;
 }
 
-[data-theme="light"] .brand-title {
-  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+[data-theme="light"] .brand-title,
+[data-theme="light"] .brand h1,
+[data-theme="light"] header .brand h1 {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  background: none !important;
+  font-weight: 800 !important;
 }
+
 
 
 .brand-icon {
