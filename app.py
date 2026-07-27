@@ -159,6 +159,25 @@ def init_db():
         except Exception as e:
             print("DB migration check:", e)
 
+        try:
+            # Auto-seed primary user account to preserve session across Railway container deploys
+            if not User.query.filter_by(email="jawadkaeik@gmail.com").first():
+                user = User(
+                    id=1,
+                    name="Jawad",
+                    email="jawadkaeik@gmail.com",
+                    password_hash=generate_password_hash("jawad1234"),
+                    is_premium=True
+                )
+                db.session.add(user)
+                db.session.commit()
+                print("[OK] Primary user 'jawadkaeik@gmail.com' auto-seeded.")
+
+        except Exception as se:
+            print("Auto-seed check:", se)
+
+
+
 
 # ── AUTH HELPERS ───────────────────────────────────────────────
 
