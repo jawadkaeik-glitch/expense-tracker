@@ -160,19 +160,21 @@ def init_db():
             print("DB migration check:", e)
 
         try:
-            # Auto-seed primary user account to preserve session across Railway container deploys
-            if not User.query.filter_by(email="jawadkaeik@gmail.com").first():
+            # Auto-seed & sync primary user account to guarantee login across all deploys
+            user = User.query.filter_by(email="jawadkaeik@gmail.com").first()
+            if not user:
                 user = User(
-                    id=1,
                     name="Jawad",
                     email="jawadkaeik@gmail.com",
                     password_hash=generate_password_hash("jawad1234"),
                     is_premium=True
                 )
                 db.session.add(user)
-                db.session.commit()
-                print("[OK] Primary user 'jawadkaeik@gmail.com' auto-seeded.")
-
+            else:
+                user.password_hash = generate_password_hash("jawad1234")
+                user.is_premium = True
+            db.session.commit()
+            print("[OK] Primary user 'jawadkaeik@gmail.com' synced.")
         except Exception as se:
             print("Auto-seed check:", se)
 
