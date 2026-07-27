@@ -1133,10 +1133,15 @@ header {
     position: sticky;
     top: 0;
     z-index: 900;
-    background: rgba(15, 23, 42, 0.95);
+    background: var(--bg-card);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--border-color);
+  }
+
+  [data-theme="light"] header {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
   }
 
   header .brand {
@@ -1178,7 +1183,7 @@ header {
     left: 0;
     right: 0;
     height: 64px;
-    background: rgba(15, 23, 42, 0.96);
+    background: var(--bg-card);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border-color);
@@ -1186,7 +1191,25 @@ header {
     justify-content: space-around;
     z-index: 1000;
     padding: 0 0.25rem;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  [data-theme="light"] .mobile-bottom-nav {
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-top: 1px solid #e2e8f0 !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  [data-theme="light"] .mobile-nav-item {
+    color: #64748b !important;
+  }
+
+  [data-theme="light"] .mobile-nav-item.active {
+    color: #0284c7 !important;
+  }
+
+  [data-theme="light"] .mobile-nav-item span {
+    color: inherit !important;
   }
 
   .mobile-nav-item {
@@ -1206,6 +1229,7 @@ header {
   .mobile-nav-item.active {
     color: #38bdf8;
   }
+
 
   .mobile-nav-icon {
     font-size: 1.35rem;
