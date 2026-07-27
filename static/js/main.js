@@ -101,9 +101,11 @@ function initModals() {
   if (openChoiceBtn && choiceModal) {
     openChoiceBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      choiceModal.classList.add('active');
+      e.stopPropagation();
+      choiceModal.classList.toggle('active');
     });
   }
+
 
   if (choiceExpenseBtn && choiceModal) {
     choiceExpenseBtn.addEventListener('click', () => {
