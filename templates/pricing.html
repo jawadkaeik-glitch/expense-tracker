@@ -103,13 +103,23 @@
             </form>
             <p style="text-align:center; font-size:0.78rem; color:var(--text-muted); margin-top:0.5rem;">
                 {% if stripe_configured %}
-                    Secure payment via Stripe &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; Instant access
+                    Secure encrypted checkout &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; Instant access
                 {% else %}
-                    🧪 Demo Mode — No real charge &nbsp;·&nbsp; Configure Stripe keys in .env to accept payments
+                    🧪 Demo Mode — No real charge &nbsp;·&nbsp; Configure Stripe/Lemon Squeezy keys in .env to accept live payments
                 {% endif %}
             </p>
+
+            <!-- Accepted Payment Methods Bar -->
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08);">
+                <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 500;">Accepted:</span>
+                <span style="font-size: 0.75rem; padding: 0.2rem 0.55rem; background: rgba(255,255,255,0.06); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #f8fafc;">💳 Visa / Mastercard</span>
+                <span style="font-size: 0.75rem; padding: 0.2rem 0.55rem; background: rgba(255,255,255,0.06); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #f8fafc;">🍎 Apple Pay</span>
+                <span style="font-size: 0.75rem; padding: 0.2rem 0.55rem; background: rgba(255,255,255,0.06); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #f8fafc;">🤖 Google Pay</span>
+                <span style="font-size: 0.75rem; padding: 0.2rem 0.55rem; background: rgba(255,255,255,0.06); border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #34d399;">🇱🇧 Whish Card</span>
+            </div>
         {% endif %}
     </div>
+
 
 </div>
 
