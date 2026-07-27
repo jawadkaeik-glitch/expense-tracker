@@ -78,6 +78,7 @@
                         </a>
                     {% endif %}
                     <div class="user-dropdown-divider"></div>
+                    <button type="button" class="user-dropdown-item" id="menuThemeToggleBtn" style="width:100%; text-align:left; background:none; border:none; cursor:pointer; font-family:inherit;">☀️ Switch Theme</button>
                     <a href="{{ url_for('settings') }}" class="user-dropdown-item">⚙️ Account Settings</a>
                     <a href="{{ url_for('pricing') }}" class="user-dropdown-item">💳 Plan & Billing</a>
                     <div class="user-dropdown-divider"></div>
@@ -85,6 +86,7 @@
                 </div>
             </div>
             {% endif %}
+
 
         </div>
     </header>
@@ -275,7 +277,29 @@
     </div>
 </div>
 
+<!-- ===== QUICK ADD CHOICE MODAL (MOBILE) ===== -->
+<div class="modal-overlay" id="quickAddChoiceModal">
+    <div class="modal-content" style="max-width: 380px; text-align: center; padding: 1.75rem;">
+        <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 0.35rem; color: var(--text-main);">✨ Quick Add Transaction</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Select what you want to add:</p>
+
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+            <button type="button" id="choiceAddExpenseBtn" class="btn-primary" style="padding: 0.85rem 1rem; justify-content: center; font-size: 1rem; width: 100%; border-radius: var(--radius-md);">
+                💸 + Add Expense
+            </button>
+            <button type="button" id="choiceAddIncomeBtn" class="btn-income" style="padding: 0.85rem 1rem; justify-content: center; font-size: 1rem; width: 100%; border-radius: var(--radius-md);">
+                💰 + Add Income
+            </button>
+        </div>
+
+        <button type="button" class="btn-secondary close-modal-trigger" style="margin-top: 1rem; width: 100%; justify-content: center;">
+            Cancel
+        </button>
+    </div>
+</div>
+
 <!-- ===== MOBILE BOTTOM NAVIGATION BAR ===== -->
+
 {% if current_user %}
 <nav class="mobile-bottom-nav">
     <a href="{{ url_for('dashboard') }}" class="mobile-nav-item {% if request.path in ['/', '/dashboard'] %}active{% endif %}">
@@ -286,10 +310,11 @@
         <div class="mobile-nav-icon">💸</div>
         <span>Expenses</span>
     </a>
-    <button type="button" class="mobile-nav-item mobile-add-btn open-expense-modal-btn" style="background:none;border:none;padding:0;">
+    <button type="button" class="mobile-nav-item mobile-add-btn" id="openQuickAddChoiceBtn" style="background:none;border:none;padding:0;">
         <div class="mobile-add-circle">+</div>
         <span style="font-size:0.68rem;">Quick Add</span>
     </button>
+
     <a href="{{ url_for('list_incomes') }}" class="mobile-nav-item {% if '/income' in request.path %}active{% endif %}">
         <div class="mobile-nav-icon">💰</div>
         <span>Incomes</span>

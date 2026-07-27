@@ -52,30 +52,33 @@ function initUserDropdown() {
 
 /* Theme Toggle */
 function initThemeToggle() {
-  const toggleBtn = document.getElementById('themeToggleBtn');
-  if (!toggleBtn) return;
+  const toggleBtns = document.querySelectorAll('#themeToggleBtn, #menuThemeToggleBtn');
 
   const savedTheme = localStorage.getItem('expense_theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
-  updateThemeIcon(toggleBtn, savedTheme);
+  toggleBtns.forEach(btn => updateThemeIcon(btn, savedTheme));
 
-  toggleBtn.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('expense_theme', newTheme);
-    updateThemeIcon(toggleBtn, newTheme);
+  toggleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('expense_theme', newTheme);
+      toggleBtns.forEach(b => updateThemeIcon(b, newTheme));
 
-    // Refresh charts if present
-    if (window.spendingChart) window.spendingChart.update();
-    if (window.incomeChart) window.incomeChart.update();
-    if (window.comparisonChart) window.comparisonChart.update();
+      // Refresh charts if present
+      if (window.spendingChart) window.spendingChart.update();
+      if (window.incomeChart) window.incomeChart.update();
+      if (window.comparisonChart) window.comparisonChart.update();
+    });
   });
 }
 
 function updateThemeIcon(btn, theme) {
-  btn.innerHTML = theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode';
+  if (!btn) return;
+  btn.innerHTML = theme === 'light' ? '🌙 Switch to Dark' : '☀️ Switch to Light';
 }
+
 
 /* Modal Handling */
 function initModals() {
@@ -84,7 +87,33 @@ function initModals() {
 
   const expenseModal = document.getElementById('expenseModal');
   const incomeModal = document.getElementById('incomeModal');
+  const choiceModal = document.getElementById('quickAddChoiceModal');
+  const openChoiceBtn = document.getElementById('openQuickAddChoiceBtn');
+  const choiceExpenseBtn = document.getElementById('choiceAddExpenseBtn');
+  const choiceIncomeBtn = document.getElementById('choiceAddIncomeBtn');
+
   const closeModalBtns = document.querySelectorAll('.close-modal-trigger');
+
+  if (openChoiceBtn && choiceModal) {
+    openChoiceBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      choiceModal.classList.add('active');
+    });
+  }
+
+  if (choiceExpenseBtn && choiceModal) {
+    choiceExpenseBtn.addEventListener('click', () => {
+      choiceModal.classList.remove('active');
+      openAddExpenseModal();
+    });
+  }
+
+  if (choiceIncomeBtn && choiceModal) {
+    choiceIncomeBtn.addEventListener('click', () => {
+      choiceModal.classList.remove('active');
+      openAddIncomeModal();
+    });
+  }
 
   openExpenseModalBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -100,21 +129,22 @@ function initModals() {
     });
   });
 
-
   closeModalBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       if (expenseModal) expenseModal.classList.remove('active');
       if (incomeModal) incomeModal.classList.remove('active');
+      if (choiceModal) choiceModal.classList.remove('active');
     });
   });
 
-  [expenseModal, incomeModal].forEach(modal => {
+  [expenseModal, incomeModal, choiceModal].forEach(modal => {
     if (modal) {
       modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.classList.remove('active');
       });
     }
   });
+
 
   // Event Delegation for Edit Expense and Edit Income
   document.addEventListener('click', (e) => {
