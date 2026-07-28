@@ -16,26 +16,40 @@ from dotenv import load_dotenv
 
 import secrets
 
+# ───────────────────────────────────────────────────────────────
+# 1. ENVIRONMENT & FLASK APPLICATION CONFIGURATION
+# ───────────────────────────────────────────────────────────────
+# Load environment variables from local .env file if available (API keys, secrets, database settings)
 load_dotenv()
 
 app = Flask(__name__)
+
+# Secret key used for signing session cookies. Fallback value ensures session cookies stay valid across server restarts.
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "kashflow-persistent-secret-key-prod-2026")
 
+# Database configuration (SQLite database stored locally in instance/expenses.db)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expenses.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Security Hardening for Session Cookies:
+# - HTTPONLY: Prevents client-side scripts/XSS from accessing session cookies.
+# - SAMESITE='Lax': Protects against Cross-Site Request Forgery (CSRF) attacks.
+# - PERMANENT_SESSION_LIFETIME: Keeps user logged in for 365 days (1 full year) on mobile & desktop.
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=365)
 
+# Enforce HTTPS-only cookies when running in production (Railway / Cloud deployment)
 if os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RAILWAY_ENVIRONMENT'):
     app.config['SESSION_COOKIE_SECURE'] = True
 
-
-
-
+# Initialize SQLAlchemy ORM instance
 db = SQLAlchemy(app)
 
-# ── STRIPE CONFIGURATION ─────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# 2. STRIPE PAYMENT GATEWAY CONFIGURATION
+# ───────────────────────────────────────────────────────────────
+# Stripe API Keys and Subscription Plan Price IDs loaded from environment variables
 STRIPE_SECRET_KEY      = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_PRICE_ID        = os.environ.get("STRIPE_PRICE_ID", "")
@@ -43,19 +57,28 @@ STRIPE_ANNUAL_PRICE_ID = os.environ.get("STRIPE_ANNUAL_PRICE_ID", "")
 STRIPE_WEBHOOK_SECRET  = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 APP_URL                = os.environ.get("APP_URL", "http://127.0.0.1:5000")
 
-
+# Set global Stripe API key for server-side checkout creation and webhook validation
 stripe.api_key = STRIPE_SECRET_KEY
 
-
+# ───────────────────────────────────────────────────────────────
+# 3. GLOBAL CATEGORIES & 50/30/20 BUDGET CLASSIFICATIONS
+# ───────────────────────────────────────────────────────────────
 EXPENSE_CATEGORIES = ['Food', 'Transportation', 'Housing', 'Shopping', 'Utilities', 'Health', 'General']
 INCOME_CATEGORIES  = ['Salary', 'Freelance', 'Investments', 'Business', 'Gifts & Grants', 'Rental', 'Other']
 PAYMENT_METHODS    = ['Card', 'Cash', 'Bank Transfer', 'Check', 'Crypto']
+
+# Category classifications for computing the 50/30/20 Budgeting Rule:
+# - Needs (50% target allowance): Essential living costs (Housing, Food, Utilities, Health, Transport)
+# - Wants (30% target allowance): Discretionary lifestyle spending (Shopping, General)
 NEEDS_CATEGORIES   = {'Housing', 'Utilities', 'Food', 'Health', 'Transportation'}
 WANTS_CATEGORIES   = {'Shopping', 'General'}
 
-# ── MODELS ────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# 4. DATABASE SCHEMAS & ORM MODELS
+# ───────────────────────────────────────────────────────────────
 
 class User(db.Model):
+    """Stores registered user account credentials, PRO status, and Stripe IDs."""
     id                     = db.Column(db.Integer, primary_key=True)
     name                   = db.Column(db.String(100), nullable=False)
     email                  = db.Column(db.String(150), nullable=False, unique=True)
@@ -67,6 +90,7 @@ class User(db.Model):
 
 
 class Expense(db.Model):
+    """Stores individual spending items logged by users."""
     id             = db.Column(db.Integer, primary_key=True)
     user_id        = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     description    = db.Column(db.String(100), nullable=False)
@@ -76,7 +100,9 @@ class Expense(db.Model):
     payment_method = db.Column(db.String(50), nullable=False, default='Card')
     notes          = db.Column(db.Text, nullable=True, default='')
 
+
 class Income(db.Model):
+    """Stores income sources logged by users (Salary, Freelance, Business, etc.)."""
     id          = db.Column(db.Integer, primary_key=True)
     user_id     = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     description = db.Column(db.String(100), nullable=False)
@@ -86,7 +112,9 @@ class Income(db.Model):
     source      = db.Column(db.String(50), nullable=False, default='Bank Transfer')
     notes       = db.Column(db.Text, nullable=True, default='')
 
+
 class Bill(db.Model):
+    """Stores recurring bills, payment due dates, and paid/unpaid status."""
     id        = db.Column(db.Integer, primary_key=True)
     user_id   = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     name      = db.Column(db.String(100), nullable=False)
@@ -96,7 +124,9 @@ class Bill(db.Model):
     is_paid   = db.Column(db.Boolean, default=False)
     recurring = db.Column(db.String(50), default='Monthly')
 
+
 class Goal(db.Model):
+    """Stores user savings goals (Emergency Fund, Vacation, Car, etc.)."""
     id             = db.Column(db.Integer, primary_key=True)
     user_id        = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     title          = db.Column(db.String(100), nullable=False)
@@ -105,7 +135,9 @@ class Goal(db.Model):
     target_date    = db.Column(db.String(10), nullable=True)
     category       = db.Column(db.String(50), default='Emergency Fund')
 
+
 class Budget(db.Model):
+    """Stores monthly spending caps for individual expense categories."""
     id            = db.Column(db.Integer, primary_key=True)
     user_id       = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     category      = db.Column(db.String(50), nullable=False)
@@ -113,8 +145,16 @@ class Budget(db.Model):
     month         = db.Column(db.String(7), nullable=False, default=lambda: datetime.now().strftime('%Y-%m'))
 
 
+
+# ───────────────────────────────────────────────────────────────
+# 5. DATABASE INITIALIZATION & MIGRATIONS
+# ───────────────────────────────────────────────────────────────
+
 def init_db():
-    """Initializes tables and migrates existing SQLite tables safely."""
+    """
+    Initializes database tables, performs column migrations safely on SQLite,
+    and auto-seeds primary account credentials to preserve logins across cloud deployments.
+    """
     with app.app_context():
         try:
             db.create_all()
@@ -126,6 +166,7 @@ def init_db():
                 conn = sqlite3.connect(db_file)
                 cursor = conn.cursor()
 
+                # Migrate Expense table: Ensure columns exist
                 cursor.execute("PRAGMA table_info(expense)")
                 exp_cols = [r[1] for r in cursor.fetchall()]
                 for col, defn in [('category', "VARCHAR(50) DEFAULT 'General'"), ('date', "VARCHAR(10) DEFAULT ''"),
@@ -134,6 +175,7 @@ def init_db():
                     if col not in exp_cols:
                         cursor.execute(f"ALTER TABLE expense ADD COLUMN {col} {defn}")
 
+                # Migrate Income table: Ensure columns exist
                 cursor.execute("PRAGMA table_info(income)")
                 inc_cols = [r[1] for r in cursor.fetchall()]
                 for col, defn in [('source', "VARCHAR(50) DEFAULT 'Bank Transfer'"), ('notes', "TEXT DEFAULT ''"),
@@ -141,12 +183,14 @@ def init_db():
                     if col not in inc_cols:
                         cursor.execute(f"ALTER TABLE income ADD COLUMN {col} {defn}")
 
+                # Migrate auxiliary tables: Ensure user_id foreign key exists
                 for table in ['bill', 'goal', 'budget']:
                     cursor.execute(f"PRAGMA table_info({table})")
                     cols = [r[1] for r in cursor.fetchall()]
                     if 'user_id' not in cols:
                         cursor.execute(f"ALTER TABLE {table} ADD COLUMN user_id INTEGER")
 
+                # Migrate User table: Ensure Stripe subscription columns exist
                 cursor.execute("PRAGMA table_info(user)")
                 user_cols = [r[1] for r in cursor.fetchall()]
                 for col, defn in [('stripe_customer_id', "VARCHAR(255)"),
@@ -160,7 +204,7 @@ def init_db():
             print("DB migration check:", e)
 
         try:
-            # Auto-seed & sync primary user account to guarantee login across all deploys
+            # Auto-seed & sync primary user account to guarantee login across Railway container deploys
             user = User.query.filter_by(email="jawadkaeik@gmail.com").first()
             if not user:
                 user = User(
@@ -179,11 +223,12 @@ def init_db():
             print("Auto-seed check:", se)
 
 
-
-
-# ── AUTH HELPERS ───────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# 6. AUTHENTICATION HELPERS & DECORATORS
+# ───────────────────────────────────────────────────────────────
 
 def get_current_user():
+    """Fetches the active logged-in User object from the session ID safely."""
     uid = session.get('user_id')
     if uid:
         try:
@@ -194,9 +239,12 @@ def get_current_user():
 
 
 def current_uid():
+    """Returns the current user ID integer from Flask session."""
     return session.get('user_id')
 
+
 def login_required(f):
+    """Decorator: Protects private routes by requiring an active logged-in user session."""
     @wraps(f)
     def decorated(*args, **kwargs):
         user = get_current_user()
@@ -207,11 +255,15 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
+
 def is_premium():
+    """Returns True if the current logged-in user has Premium PRO status."""
     user = get_current_user()
     return user.is_premium if user else False
 
+
 def premium_required(f):
+    """Decorator: Enforces a Premium subscription requirement for PRO features."""
     @wraps(f)
     def decorated(*args, **kwargs):
         user = get_current_user()
@@ -228,8 +280,10 @@ def premium_required(f):
 
 @app.context_processor
 def inject_globals():
+    """Injects user authentication status globally into all Jinja HTML templates."""
     user = get_current_user()
     return {'is_premium': user.is_premium if user else False, 'current_user': user}
+
 
 
 # ── AUTH ROUTES ───────────────────────────────────────────────

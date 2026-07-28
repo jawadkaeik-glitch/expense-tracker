@@ -1,5 +1,11 @@
-// KashFlow Interactive Features
+/**
+ * KashFlow - Frontend Interactive Module
+ * Handles UI interactions, theme toggling, modal dialogs, Chart.js visualizations,
+ * touch gestures, and quick spend logging.
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize all core interactive components when DOM is fully loaded
   initThemeToggle();
   initSearchAndFilters();
   initModals();
@@ -13,13 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initSwipeActions();
 });
 
-
-/* User Avatar Dropdown */
+/* ───────────────────────────────────────────────────────────────
+ * 1. USER AVATAR DROPDOWN MENU
+ * Controls opening, closing, outside click, and ESC key handlers for user profile menu.
+ * ─────────────────────────────────────────────────────────────── */
 function initUserDropdown() {
   const btn = document.getElementById('userAvatarBtn');
   const dropdown = document.getElementById('userDropdown');
   if (!btn || !dropdown) return;
 
+  // Toggle menu on avatar button click
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     const isOpen = dropdown.classList.contains('show');
@@ -34,6 +43,7 @@ function initUserDropdown() {
     }
   });
 
+  // Close dropdown when clicking outside
   document.addEventListener('click', (e) => {
     if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
       dropdown.classList.remove('show');
@@ -42,6 +52,7 @@ function initUserDropdown() {
     }
   });
 
+  // Close dropdown on Escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       dropdown.classList.remove('show');
@@ -51,13 +62,14 @@ function initUserDropdown() {
   });
 }
 
-
-
-
-/* Theme Toggle */
+/* ───────────────────────────────────────────────────────────────
+ * 2. LIGHT / DARK THEME TOGGLE
+ * Persists theme preference in localStorage & updates CSS data-theme attributes.
+ * ─────────────────────────────────────────────────────────────── */
 function initThemeToggle() {
   const toggleBtns = document.querySelectorAll('#themeToggleBtn, #menuThemeToggleBtn');
 
+  // Load saved theme preference or default to dark mode
   const savedTheme = localStorage.getItem('expense_theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
   toggleBtns.forEach(btn => updateThemeIcon(btn, savedTheme));
@@ -70,7 +82,7 @@ function initThemeToggle() {
       localStorage.setItem('expense_theme', newTheme);
       toggleBtns.forEach(b => updateThemeIcon(b, newTheme));
 
-      // Refresh charts if present
+      // Refresh Chart.js instances to adjust chart colors dynamically
       if (window.spendingChart) window.spendingChart.update();
       if (window.incomeChart) window.incomeChart.update();
       if (window.comparisonChart) window.comparisonChart.update();
@@ -83,8 +95,10 @@ function updateThemeIcon(btn, theme) {
   btn.innerHTML = theme === 'light' ? '🌙 Switch to Dark' : '☀️ Switch to Light';
 }
 
-
-/* Modal Handling */
+/* ───────────────────────────────────────────────────────────────
+ * 3. MODAL DIALOG MANAGEMENT
+ * Handles opening, editing, closing, and mobile action sheet toggling.
+ * ─────────────────────────────────────────────────────────────── */
 function initModals() {
   const openExpenseModalBtns = document.querySelectorAll('#openAddModalBtn, .open-expense-modal-btn');
   const openIncomeModalBtns = document.querySelectorAll('#openAddIncomeModalBtn, .open-income-modal-btn');
@@ -98,6 +112,7 @@ function initModals() {
 
   const closeModalBtns = document.querySelectorAll('.close-modal-trigger');
 
+  // Mobile Bottom Tab "+" Quick Add Button Listener (Toggles Choice Action Sheet)
   if (openChoiceBtn && choiceModal) {
     openChoiceBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -106,7 +121,7 @@ function initModals() {
     });
   }
 
-
+  // Quick Add Choice: Add Expense Selected
   if (choiceExpenseBtn && choiceModal) {
     choiceExpenseBtn.addEventListener('click', () => {
       choiceModal.classList.remove('active');
@@ -114,6 +129,7 @@ function initModals() {
     });
   }
 
+  // Quick Add Choice: Add Income Selected
   if (choiceIncomeBtn && choiceModal) {
     choiceIncomeBtn.addEventListener('click', () => {
       choiceModal.classList.remove('active');
@@ -121,6 +137,7 @@ function initModals() {
     });
   }
 
+  // Open Expense Modal
   openExpenseModalBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -128,6 +145,7 @@ function initModals() {
     });
   });
 
+  // Open Income Modal
   openIncomeModalBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -135,6 +153,7 @@ function initModals() {
     });
   });
 
+  // Close modals on cancel/close button trigger
   closeModalBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       if (expenseModal) expenseModal.classList.remove('active');
@@ -143,6 +162,7 @@ function initModals() {
     });
   });
 
+  // Close modals when clicking backdrop overlay
   [expenseModal, incomeModal, choiceModal].forEach(modal => {
     if (modal) {
       modal.addEventListener('click', (e) => {
@@ -151,8 +171,7 @@ function initModals() {
     }
   });
 
-
-  // Event Delegation for Edit Expense and Edit Income
+  // Event Delegation for Edit Expense and Edit Income Buttons in Data Tables
   document.addEventListener('click', (e) => {
     const editExpBtn = e.target.closest('.edit-modal-btn');
     if (editExpBtn) {
@@ -179,17 +198,7 @@ function initModals() {
       openEditIncomeModal(id, description, amount, category, date, source, notes);
       return;
     }
-
-    const deleteBtn = e.target.closest('form button.btn-danger, form .btn-danger');
-    if (deleteBtn) {
-      if (!confirm('Are you sure you want to delete this item?')) {
-        e.preventDefault();
-      }
-      return;
-    }
   });
-
-
 }
 
 function openAddExpenseModal() {
@@ -241,8 +250,8 @@ function openAddIncomeModal() {
 
   if (!modal || !form) return;
 
-  modalTitle.textContent = 'Add New Income';
-  submitBtn.textContent = 'Add Income';
+  modalTitle.textContent = 'Add Income';
+  submitBtn.textContent = 'Save Income';
   form.action = '/add-income';
   form.reset();
 
@@ -274,7 +283,10 @@ function openEditIncomeModal(id, description, amount, category, date, source, no
   modal.classList.add('active');
 }
 
-/* Client-side Live Table Filter & Search */
+/* ───────────────────────────────────────────────────────────────
+ * 4. LIVE CLIENT-SIDE TABLE SEARCH & CATEGORY FILTERING
+ * Filter table rows dynamically in real time as user types.
+ * ─────────────────────────────────────────────────────────────── */
 function initSearchAndFilters() {
   const searchInput = document.getElementById('tableSearchInput');
   const categorySelect = document.getElementById('tableCategoryFilter');
@@ -303,9 +315,9 @@ function initSearchAndFilters() {
       }
     });
 
-    const emptyRow = document.getElementById('noResultsRow');
-    if (emptyRow) {
-      emptyRow.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+    const emptyMsg = document.getElementById('tableEmptySearchMsg');
+    if (emptyMsg) {
+      emptyMsg.style.display = (visibleCount === 0 && rows.length > 0) ? 'block' : 'none';
     }
   };
 
@@ -313,25 +325,32 @@ function initSearchAndFilters() {
   if (categorySelect) categorySelect.addEventListener('change', filterRows);
 }
 
-/* Chart.js Initialization */
+/* ───────────────────────────────────────────────────────────────
+ * 5. CHART.JS VISUALIZATIONS
+ * Renders spending donut charts and month-over-month trend bar charts.
+ * ─────────────────────────────────────────────────────────────── */
 function initCharts() {
-  const categoryCanvas = document.getElementById('categoryChart');
-  const incomeCanvas = document.getElementById('incomeChart');
-  const comparisonCanvas = document.getElementById('comparisonChart');
+  if (typeof Chart === 'undefined') return;
 
-  // Expense Doughnut
-  if (categoryCanvas && window.chartCategoryData) {
-    const ctx = categoryCanvas.getContext('2d');
+  const spendingCanvas = document.getElementById('spendingChart');
+  if (spendingCanvas && window.spendingChartData) {
+    const data = window.spendingChartData;
+    const ctx = spendingCanvas.getContext('2d');
+
+    const colors = [
+      '#6366f1', '#10b981', '#f59e0b', '#ef4444',
+      '#8b5cf6', '#06b6d4', '#ec4899', '#64748b'
+    ];
+
     window.spendingChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: window.chartCategoryData.labels,
+        labels: data.labels || [],
         datasets: [{
-          data: window.chartCategoryData.data,
-          backgroundColor: [
-            '#f59e0b', '#3b82f6', '#a855f7', '#ec4899', '#06b6d4', '#10b981', '#94a3b8'
-          ],
-          borderWidth: 0
+          data: data.data || [],
+          backgroundColor: colors.slice(0, (data.labels || []).length),
+          borderWidth: 0,
+          hoverOffset: 6
         }]
       },
       options: {
@@ -340,7 +359,11 @@ function initCharts() {
         plugins: {
           legend: {
             position: 'bottom',
-            labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() }
+            labels: {
+              boxWidth: 12,
+              padding: 15,
+              color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim()
+            }
           }
         },
         cutout: '70%'
@@ -348,39 +371,11 @@ function initCharts() {
     });
   }
 
-  // Income Doughnut
-  if (incomeCanvas && window.chartIncomeData) {
-    const ctx = incomeCanvas.getContext('2d');
-    window.incomeChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: window.chartIncomeData.labels,
-        datasets: [{
-          data: window.chartIncomeData.data,
-          backgroundColor: [
-            '#10b981', '#6366f1', '#06b6d4', '#a855f7', '#ec4899', '#f59e0b', '#3b82f6'
-          ],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() }
-          }
-        },
-        cutout: '70%'
-      }
-    });
-  }
-
-  // Comparison Bar Chart (Income vs Expense 6-Month Trend & Summary)
-  if (comparisonCanvas && window.chartComparisonData) {
-    const ctx = comparisonCanvas.getContext('2d');
-    const compData = window.chartComparisonData;
+  // Month-Over-Month Income vs Expenses Comparison Bar Chart
+  const compCanvas = document.getElementById('comparisonChart');
+  if (compCanvas && window.comparisonChartData) {
+    const compData = window.comparisonChartData;
+    const ctx = compCanvas.getContext('2d');
 
     let datasets = [];
     if (compData.income && compData.expenses) {
@@ -388,31 +383,21 @@ function initCharts() {
         {
           label: 'Income ($)',
           data: compData.income,
-          backgroundColor: 'rgba(16, 185, 129, 0.75)',
-          borderColor: '#10b981',
-          borderWidth: 1,
+          backgroundColor: '#10b981',
           borderRadius: 6
         },
         {
           label: 'Expenses ($)',
           data: compData.expenses,
-          backgroundColor: 'rgba(239, 68, 68, 0.75)',
-          borderColor: '#ef4444',
-          borderWidth: 1,
+          backgroundColor: '#ef4444',
           borderRadius: 6
         }
       ];
     } else {
       datasets = [{
-        label: 'Amount ($)',
+        label: 'Monthly Stats ($)',
         data: compData.data || [],
-        backgroundColor: [
-          'rgba(16, 185, 129, 0.75)',
-          'rgba(239, 68, 68, 0.75)',
-          'rgba(99, 102, 241, 0.75)'
-        ],
-        borderColor: ['#10b981', '#ef4444', '#6366f1'],
-        borderWidth: 1,
+        backgroundColor: ['#10b981', '#ef4444', '#6366f1'],
         borderRadius: 8
       }];
     }
@@ -447,51 +432,11 @@ function initCharts() {
       }
     });
   }
-
-  // Trend Line Chart (Monthly Expense History)
-  const trendCanvas = document.getElementById('trendChart');
-  if (trendCanvas && window.chartTrendData) {
-    const ctx = trendCanvas.getContext('2d');
-    const trendData = window.chartTrendData;
-    window.trendChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: trendData.labels || [],
-        datasets: [{
-          label: 'Expenses ($)',
-          data: trendData.expenses || trendData.data || [],
-          borderColor: '#ef4444',
-          backgroundColor: 'rgba(239, 68, 68, 0.15)',
-          fill: true,
-          tension: 0.35,
-          borderWidth: 2,
-          pointRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() }
-          },
-          y: {
-            beginAtZero: true,
-            grid: { color: 'rgba(255,255,255,0.05)' },
-            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() }
-          }
-        }
-      }
-    });
-  }
 }
 
-
-/* ===== FLOATING ACTION BUTTON ===== */
+/* ───────────────────────────────────────────────────────────────
+ * 6. FLOATING ACTION BUTTON (FAB) & SPEED DIAL
+ * ─────────────────────────────────────────────────────────────── */
 function initFAB() {
   const fabMain = document.getElementById('fabMain');
   const fabOptions = document.getElementById('fabOptions');
@@ -522,16 +467,17 @@ function initFAB() {
     });
   }
 
-  // Close FAB when clicking elsewhere
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#fabContainer')) {
-      fabOptions.classList.remove('open');
-      fabMain.classList.remove('open');
+      if (fabOptions) fabOptions.classList.remove('open');
+      if (fabMain) fabMain.classList.remove('open');
     }
   });
 }
 
-/* ===== ADVANCED OPTIONS TOGGLE ===== */
+/* ───────────────────────────────────────────────────────────────
+ * 7. ADVANCED FORM FIELD EXPANDERS
+ * ─────────────────────────────────────────────────────────────── */
 function initAdvancedToggles() {
   function setupToggle(toggleId, fieldsId, arrowId) {
     const btn = document.getElementById(toggleId);
@@ -547,7 +493,10 @@ function initAdvancedToggles() {
   setupToggle('incomeAdvancedToggle',  'incomeAdvancedFields',  'incomeAdvancedArrow');
 }
 
-/* ===== SET DEFAULT DATES ===== */
+/* ───────────────────────────────────────────────────────────────
+ * 8. DEFAULT DATE INITIALIZER
+ * Sets today's YYYY-MM-DD as default for date input fields.
+ * ─────────────────────────────────────────────────────────────── */
 function setDefaultDates() {
   const today = new Date().toISOString().split('T')[0];
   ['modalDate', 'modalIncomeDate'].forEach(id => {
@@ -556,7 +505,10 @@ function setDefaultDates() {
   });
 }
 
-/* ===== QUICK EMOJI CATEGORY CHIPS (<5s LOGGING) ===== */
+/* ───────────────────────────────────────────────────────────────
+ * 9. QUICK EMOJI CATEGORY CHIPS (<5s LOGGING)
+ * Selecting an emoji chip populates the category & description instantly.
+ * ─────────────────────────────────────────────────────────────── */
 function initQuickChips() {
   const chips = document.querySelectorAll('.quick-chip-btn');
   const catSelect = document.getElementById('modalCategory');
@@ -570,17 +522,16 @@ function initQuickChips() {
       const cat = chip.getAttribute('data-cat');
       const desc = chip.getAttribute('data-desc');
 
-      if (catSelect && cat) {
-        catSelect.value = cat;
-      }
-      if (descInput && desc) {
-        descInput.value = desc;
-      }
+      if (catSelect && cat) catSelect.value = cat;
+      if (descInput && desc) descInput.value = desc;
     });
   });
 }
 
-/* ===== REPEAT LAST SPEND (1-TAP LOGGING) ===== */
+/* ───────────────────────────────────────────────────────────────
+ * 10. REPEAT LAST SPEND (1-TAP LOGGING)
+ * Fills in the last logged expense details in 1 tap.
+ * ─────────────────────────────────────────────────────────────── */
 function initRepeatLastSpend() {
   const repeatBtn = document.getElementById('repeatLastSpendBtn');
   if (!repeatBtn) return;
@@ -600,7 +551,10 @@ function initRepeatLastSpend() {
   });
 }
 
-/* ===== MOBILE TOUCH SWIPE GESTURES ===== */
+/* ───────────────────────────────────────────────────────────────
+ * 11. MOBILE TOUCH SWIPE GESTURES
+ * Swipe Left -> Delete item; Swipe Right -> Edit item.
+ * ─────────────────────────────────────────────────────────────── */
 function initSwipeActions() {
   const rows = document.querySelectorAll('.data-row');
 
@@ -626,13 +580,13 @@ function initSwipeActions() {
       row.style.transform = 'translateX(0)';
 
       if (diffX < -70) {
-        // Swipe Left -> Trigger Delete
+        // Swipe Left -> Trigger Delete confirmation
         const deleteForm = row.querySelector('form[action*="/delete"]');
         if (deleteForm && confirm('Delete this item?')) {
           deleteForm.submit();
         }
       } else if (diffX > 70) {
-        // Swipe Right -> Trigger Edit
+        // Swipe Right -> Open Edit Modal
         const editBtn = row.querySelector('.edit-modal-btn, .edit-income-modal-btn');
         if (editBtn) editBtn.click();
       }
@@ -642,4 +596,3 @@ function initSwipeActions() {
     });
   });
 }
-
