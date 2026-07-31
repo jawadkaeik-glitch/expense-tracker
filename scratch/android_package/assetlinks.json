@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.railway.up.web_production_d27a54.twa",
+        "sha256_cert_fingerprints": ["BC:A5:5A:13:38:BA:19:81:29:F7:40:E0:8B:D2:5A:2E:66:1B:4D:71:0C:66:6C:BA:70:7E:C3:EE:89:DA:28:26"]
+      }
+    }]
