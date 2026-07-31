@@ -1248,11 +1248,33 @@ def export_csv():
         writer.writerow(['Expense', e.date, e.description, e.category, f"-{e.amount:.2f}", e.payment_method or '', e.notes or ''])
     output.seek(0)
     fn = f"kashflow_export_{datetime.now().strftime('%Y%m')}.csv"
-    return Response(output.getvalue(), mimetype='text/csv',
-        headers={'Content-Disposition': f'attachment;filename={fn}'})
+    return Response(output.getvalue(), mimetype='text/csv', headers={'Content-Disposition': f'attachment;filename={fn}'})
+
+
+@app.route("/.well-known/assetlinks.json")
+
+def asset_links():
+    """Digital Asset Links endpoint required by Google Play for Android Trusted Web Activity (TWA) verification."""
+    asset_links_path = os.path.join(app.root_path, 'static', 'assetlinks.json')
+    if os.path.exists(asset_links_path):
+        with open(asset_links_path, 'r', encoding='utf-8') as f:
+            return Response(f.read(), mimetype='application/json')
+
+    default_assetlinks = [{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+            "namespace": "android_app",
+            "package_name": os.environ.get("ANDROID_PACKAGE_NAME", "com.kashflow.app"),
+            "sha256_cert_fingerprints": [
+                os.environ.get("ANDROID_SHA256_FINGERPRINT", "00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00")
+            ]
+        }
+    }]
+    return jsonify(default_assetlinks)
 
 
 # Initialize database and migrations on startup (for Gunicorn & local dev)
+
 with app.app_context():
     init_db()
 

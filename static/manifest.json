@@ -1,12 +1,14 @@
 {
-  "name": "KashFlow — Personal Finance Advisor",
+  "name": "KashFlow — Personal Finance & Budget Tracker",
   "short_name": "KashFlow",
-  "description": "Smart personal finance advisor, expense tracker, budget limits, and AI insights.",
-  "start_url": "/dashboard",
+  "description": "Smart personal finance advisor, expense tracker, budget limits, daily allowance, and financial health insights.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "orientation": "portrait-primary",
+  "categories": ["finance", "productivity", "utilities"],
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
@@ -22,3 +24,4 @@
     }
   ]
 }
+
