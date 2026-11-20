@@ -614,13 +614,13 @@ button, input, select, textarea {
   bottom: 0;
   left: 0;
   right: 0;
-  height: var(--bottom-nav-height);
+  height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
   background: var(--bg-surface);
   border-top: 1px solid var(--border-color);
   z-index: 500;
   align-items: center;
   justify-content: space-around;
-  padding: 0 0.5rem;
+  padding: 0 0.5rem env(safe-area-inset-bottom, 0px) 0.5rem;
 }
 
 .mobile-nav-item {
@@ -758,7 +758,7 @@ button, input, select, textarea {
   }
 
   .app-container {
-    padding-bottom: 5.5rem;
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .modal-backdrop {
