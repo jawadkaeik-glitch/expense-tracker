@@ -6,6 +6,7 @@ KashFlow - Smart Personal Finance & Expense Tracker
 import os
 import io
 import csv
+import math
 import calendar
 from datetime import datetime, timedelta
 from collections import defaultdict
@@ -207,6 +208,41 @@ def login_required(f):
 @app.context_processor
 def inject_globals():
     return {'current_user': get_current_user()}
+
+
+# ───────────────────────────────────────────────────────────────
+# 4.1 DATA VALIDATION & NUMERIC RESILIENCE
+# ───────────────────────────────────────────────────────────────
+
+def parse_currency(val_str, max_val=100_000_000.0):
+    """
+    Safely parses and validates financial amounts.
+    Prevents NaN, Inf, zero/negative amounts, and huge overflow values.
+    Returns value rounded to 2 decimal places to prevent floating-point drift.
+    """
+    if val_str is None:
+        return None
+    try:
+        val = float(str(val_str).replace('$', '').replace(',', '').strip())
+        if math.isnan(val) or math.isinf(val) or val <= 0 or val > max_val:
+            return None
+        return round(val, 2)
+    except (TypeError, ValueError):
+        return None
+
+
+def parse_date(date_str):
+    """
+    Safely validates date format (YYYY-MM-DD), verifying calendar leap-year correctness.
+    Falls back to current date if empty. Returns None if malformed or nonexistent day.
+    """
+    if not date_str or not str(date_str).strip():
+        return datetime.now().strftime('%Y-%m-%d')
+    try:
+        dt = datetime.strptime(str(date_str).strip(), '%Y-%m-%d')
+        return dt.strftime('%Y-%m-%d')
+    except (ValueError, TypeError):
+        return None
 
 
 # ───────────────────────────────────────────────────────────────
@@ -548,23 +584,22 @@ def add_expense():
         flash("Expense description is required.", "error")
         return redirect(request.referrer or url_for("list_expenses"))
 
-    try:
-        amount = float(amount_str)
-        if amount <= 0:
-            raise ValueError
-    except (TypeError, ValueError):
+    amount = parse_currency(amount_str)
+    if amount is None:
         flash("Please enter a valid positive amount.", "error")
         return redirect(request.referrer or url_for("list_expenses"))
 
-    if not date:
-        date = datetime.now().strftime('%Y-%m-%d')
+    parsed_date = parse_date(date)
+    if not parsed_date:
+        flash("Please enter a valid date in YYYY-MM-DD format.", "error")
+        return redirect(request.referrer or url_for("list_expenses"))
 
     db.session.add(Expense(
         user_id=current_uid(),
         description=description,
         amount=amount,
         category=category,
-        date=date,
+        date=parsed_date,
         payment_method=payment_method,
         notes=notes
     ))
@@ -589,18 +624,20 @@ def edit_expense(id):
             flash("Description is required.", "error")
             return redirect(url_for("edit_expense", id=id))
 
-        try:
-            amount = float(amount_str)
-            if amount <= 0:
-                raise ValueError
-        except (TypeError, ValueError):
+        amount = parse_currency(amount_str)
+        if amount is None:
             flash("Amount must be a valid positive number.", "error")
+            return redirect(url_for("edit_expense", id=id))
+
+        parsed_date = parse_date(date)
+        if not parsed_date:
+            flash("Please enter a valid date in YYYY-MM-DD format.", "error")
             return redirect(url_for("edit_expense", id=id))
 
         expense.description    = description
         expense.amount         = amount
         expense.category       = category
-        expense.date           = date
+        expense.date           = parsed_date
         expense.payment_method = payment_method
         expense.notes          = notes
 
@@ -658,23 +695,22 @@ def add_income():
         flash("Income description is required.", "error")
         return redirect(request.referrer or url_for("list_incomes"))
 
-    try:
-        amount = float(amount_str)
-        if amount <= 0:
-            raise ValueError
-    except (TypeError, ValueError):
+    amount = parse_currency(amount_str)
+    if amount is None:
         flash("Please enter a valid positive amount.", "error")
         return redirect(request.referrer or url_for("list_incomes"))
 
-    if not date:
-        date = datetime.now().strftime('%Y-%m-%d')
+    parsed_date = parse_date(date)
+    if not parsed_date:
+        flash("Please enter a valid date in YYYY-MM-DD format.", "error")
+        return redirect(request.referrer or url_for("list_incomes"))
 
     db.session.add(Income(
         user_id=current_uid(),
         description=description,
         amount=amount,
         category=category,
-        date=date,
+        date=parsed_date,
         source=source,
         notes=notes
     ))
@@ -699,18 +735,20 @@ def edit_income(id):
             flash("Description is required.", "error")
             return redirect(url_for("edit_income", id=id))
 
-        try:
-            amount = float(amount_str)
-            if amount <= 0:
-                raise ValueError
-        except (TypeError, ValueError):
+        amount = parse_currency(amount_str)
+        if amount is None:
             flash("Amount must be a valid positive number.", "error")
+            return redirect(url_for("edit_income", id=id))
+
+        parsed_date = parse_date(date)
+        if not parsed_date:
+            flash("Please enter a valid date in YYYY-MM-DD format.", "error")
             return redirect(url_for("edit_income", id=id))
 
         income.description = description
         income.amount      = amount
         income.category    = category
-        income.date        = date
+        income.date        = parsed_date
         income.source      = source
         income.notes       = notes
 
@@ -1032,6 +1070,72 @@ def export_csv():
         mimetype='text/csv',
         headers={'Content-Disposition': f'attachment;filename={filename}'}
     )
+
+
+@app.route("/import-csv", methods=["POST"])
+@login_required
+def import_csv():
+    file = request.files.get("csv_file")
+    if not file or not file.filename:
+        flash("Please select a CSV file to restore.", "error")
+        return redirect(url_for("settings"))
+
+    if not file.filename.lower().endswith(".csv"):
+        flash("Only standard .csv files are supported for import.", "error")
+        return redirect(url_for("settings"))
+
+    try:
+        content = file.stream.read().decode("utf-8-sig")
+        stream = io.StringIO(content, newline=None)
+        reader = csv.reader(stream)
+        header = next(reader, None)
+
+        imported_count = 0
+        uid = current_uid()
+
+        for row in reader:
+            if not row or len(row) < 5:
+                continue
+            rec_type = row[0].strip().capitalize()
+            date = parse_date(row[1]) or datetime.now().strftime('%Y-%m-%d')
+            description = row[2].strip()
+            category = row[3].strip()
+            amount = parse_currency(row[4])
+            method_source = row[5].strip() if len(row) > 5 else ''
+            notes = row[6].strip() if len(row) > 6 else ''
+
+            if not description or amount is None:
+                continue
+
+            if rec_type == 'Income':
+                exists = Income.query.filter_by(
+                    user_id=uid, date=date, description=description, amount=amount
+                ).first()
+                if not exists:
+                    db.session.add(Income(
+                        user_id=uid, description=description, amount=amount,
+                        category=category or 'Other', date=date,
+                        source=method_source or 'Bank Transfer', notes=notes
+                    ))
+                    imported_count += 1
+            else:
+                exists = Expense.query.filter_by(
+                    user_id=uid, date=date, description=description, amount=amount
+                ).first()
+                if not exists:
+                    db.session.add(Expense(
+                        user_id=uid, description=description, amount=amount,
+                        category=category or 'General', date=date,
+                        payment_method=method_source or 'Card', notes=notes
+                    ))
+                    imported_count += 1
+
+        db.session.commit()
+        flash(f"Successfully restored {imported_count} financial transactions from CSV.", "success")
+    except Exception as e:
+        flash(f"Failed to process CSV file: {str(e)}", "error")
+
+    return redirect(url_for("settings"))
 
 
 @app.route("/privacy")
