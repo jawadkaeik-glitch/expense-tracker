@@ -14,7 +14,7 @@ from functools import wraps
 
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    flash, session, Response, jsonify, abort
+    flash, session, Response, jsonify, abort, send_from_directory
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -1158,6 +1158,17 @@ def delete_account_request():
             flash(f"Account deletion request received for {email}. If an account exists, all records will be purged within 48 hours.", "success")
         return redirect(url_for("delete_account_request"))
     return render_template("delete_account_request.html")
+
+
+@app.route("/.well-known/assetlinks.json")
+def assetlinks():
+    well_known_dir = os.path.join(app.root_path, "static", ".well-known")
+    if not os.path.exists(well_known_dir):
+        os.makedirs(well_known_dir, exist_ok=True)
+    file_path = os.path.join(well_known_dir, "assetlinks.json")
+    if not os.path.exists(file_path):
+        return jsonify([])
+    return send_from_directory(well_known_dir, "assetlinks.json", mimetype="application/json")
 
 
 # ───────────────────────────────────────────────────────────────
