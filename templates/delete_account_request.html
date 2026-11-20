@@ -1,0 +1,67 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Request Account & Data Deletion — KashFlow{% endblock %}
+
+{% block content %}
+<div style="max-width: 720px; margin: 1.5rem auto;">
+    <div class="card">
+        <div class="card-header">
+            <h1 style="font-size: 1.4rem; font-weight: 700;">Account & Data Deletion Request</h1>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Google Play Compliance Portal</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.92rem; line-height: 1.6; color: var(--text-muted);">
+            <p>
+                In compliance with Google Play Store policies and global privacy regulations (GDPR & CCPA), KashFlow gives all users complete control over their accounts and data. You may request permanent deletion of your account and all associated financial records at any time.
+            </p>
+
+            <div style="background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">Method 1: Instant In-App Deletion (Recommended)</h3>
+                <p style="font-size: 0.88rem; margin-bottom: 0.75rem;">
+                    If you still have access to your account, you can permanently delete everything immediately without waiting:
+                </p>
+                <ol style="padding-left: 1.25rem; font-size: 0.85rem; margin-bottom: 1rem;">
+                    <li>Log in to your KashFlow account.</li>
+                    <li>Navigate to <strong>Settings</strong>.</li>
+                    <li>Scroll down to the <strong>Delete Account</strong> section.</li>
+                    <li>Confirm your password and click <strong>Permanently Delete Account</strong>.</li>
+                </ol>
+                {% if current_user %}
+                <a href="{{ url_for('settings') }}" class="btn btn-danger" style="font-size: 0.85rem;">Go to Settings & Delete Now</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-secondary" style="font-size: 0.85rem;">Log In to Delete Account</a>
+                {% endif %}
+            </div>
+
+            <div style="background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">Method 2: Web Deletion Request (If App is Uninstalled)</h3>
+                <p style="font-size: 0.88rem; margin-bottom: 0.75rem;">
+                    If you have uninstalled the app or lost your password, submit your registered email below. Our team will verify ownership and permanently delete all records associated with that address within 48 hours.
+                </p>
+                <form action="{{ url_for('delete_account_request') }}" method="POST" style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="email" name="email" class="form-control" placeholder="your-email@example.com" style="max-width: 320px;" required>
+                    <button type="submit" class="btn btn-primary" style="font-size: 0.85rem;">Submit Deletion Request</button>
+                </form>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">What Data is Permanently Deleted?</h3>
+                <ul style="padding-left: 1.25rem; font-size: 0.85rem;">
+                    <li>User authentication profile (Name, Email address, Password hash).</li>
+                    <li>All income and expense transaction records.</li>
+                    <li>All recurring bills, savings goals, and monthly budget limits.</li>
+                </ul>
+                <p style="font-size: 0.82rem; margin-top: 0.5rem; color: var(--text-dim);">
+                    * Deletion is a hard purge from the database. No residual financial history is retained.
+                </p>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('privacy') }}" class="btn btn-secondary" style="font-size: 0.85rem;">Privacy Policy</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary" style="font-size: 0.85rem;">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

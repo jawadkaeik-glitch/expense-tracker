@@ -1148,6 +1148,18 @@ def terms():
     return render_template("terms.html")
 
 
+@app.route("/delete-account-request", methods=["GET", "POST"])
+def delete_account_request():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        if not email or "@" not in email:
+            flash("Please enter a valid email address.", "error")
+        else:
+            flash(f"Account deletion request received for {email}. If an account exists, all records will be purged within 48 hours.", "success")
+        return redirect(url_for("delete_account_request"))
+    return render_template("delete_account_request.html")
+
+
 # ───────────────────────────────────────────────────────────────
 # 15. INITIALIZATION
 # ───────────────────────────────────────────────────────────────

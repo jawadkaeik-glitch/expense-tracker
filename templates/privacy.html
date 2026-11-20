@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}Privacy Policy — KashFlow{% endblock %}
 
@@ -7,33 +7,65 @@
     <div class="card">
         <div class="card-header">
             <h1 style="font-size: 1.4rem; font-weight: 700;">Privacy Policy</h1>
-            <span style="font-size: 0.8rem; color: var(--text-muted);">Updated November 2026</span>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Last Updated: November 2026</span>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.92rem; line-height: 1.6; color: var(--text-muted);">
+        <div style="display: flex; flex-direction: column; gap: 1.35rem; font-size: 0.92rem; line-height: 1.6; color: var(--text-muted);">
             <div>
-                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">1. 100% Free Service</h3>
-                <p>KashFlow is a 100% free personal finance advisor and expense tracking application. We do not process payments, we do not require credit card details, and we do not sell your personal or financial data to third-party advertisers.</p>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">1. Overview & 100% Free Model</h3>
+                <p>
+                    KashFlow is a 100% free personal finance advisor and budget tracking application. We operate with zero monetization overhead: we do not sell products, we do not require subscription fees, we do not process payment card information, and we do not display targeted third-party advertisements.
+                </p>
             </div>
 
             <div>
-                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">2. Information We Store</h3>
-                <p>We store your name, email address, and a cryptographically salted password hash to authenticate your access. The transactions, budgets, bills, and goals you enter are stored in an encrypted database strictly isolated to your user ID.</p>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">2. Information We Collect & How It Is Used</h3>
+                <ul style="padding-left: 1.25rem; font-size: 0.88rem; margin-top: 0.35rem;">
+                    <li><strong>Account Credentials:</strong> Your name, email address, and a cryptographically salted password hash (never stored in plain text). Used solely to authenticate your account.</li>
+                    <li><strong>Financial Records:</strong> Transaction descriptions, amounts, categories, dates, recurring bills, savings goals, and spending limits that you manually record. Used solely to calculate your financial health score, daily safe allowance, and budgeting progress.</li>
+                </ul>
+                <p style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-dim);">
+                    * Note: KashFlow does not connect to bank APIs or scrape banking credentials. All records are entered at your discretion.
+                </p>
             </div>
 
             <div>
-                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">3. Data Security</h3>
-                <p>Your session is secured using modern cookie protection (HTTPOnly, SameSite, and HTTPS in production), form CSRF token validation, and rate-limiting on authentication endpoints to guard against brute-force attacks.</p>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">3. Zero Third-Party SDK Data Sharing</h3>
+                <p>
+                    We value your privacy. KashFlow integrates <strong>NO third-party advertising SDKs</strong>, <strong>NO analytics trackers</strong> (such as Google Analytics or Facebook Pixel), and <strong>NO data brokers</strong>. Your personal and financial information is never sold, leased, or shared with third parties.
+                </p>
             </div>
 
             <div>
-                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">4. Data Export & Permanent Deletion</h3>
-                <p>You have full sovereignty over your data. You can download all your transaction history as a CSV file at any time, or permanently delete your account and all associated financial records with one click in your Account Settings.</p>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">4. Data Security & Storage</h3>
+                <p>
+                    All data transmitted between your device and our servers is protected using TLS/HTTPS encryption with HTTP Strict Transport Security (HSTS). Sessions utilize hardened HTTPOnly, SameSite cookie flags, and form CSRF token verification. Backend databases enforce strict tenant isolation ensuring users can only query their own records.
+                </p>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">5. Data Retention, Portability & Deletion</h3>
+                <p>
+                    Your records are retained only as long as your account remains active. You maintain complete sovereignty over your data:
+                </p>
+                <ul style="padding-left: 1.25rem; font-size: 0.88rem; margin-top: 0.35rem;">
+                    <li><strong>Data Export:</strong> Download all income and expense transactions in a standard CSV file anytime via Settings.</li>
+                    <li><strong>Data Restore:</strong> Re-import your transactions from a CSV backup without creating duplicate records.</li>
+                    <li><strong>Account Deletion:</strong> Permanently delete your account and all associated records directly from Settings or via our public <a href="{{ url_for('delete_account_request') }}" style="color: var(--accent-primary); font-weight: 600;">Account Deletion Request Portal</a>. Deletions are irreversible and execute a hard database purge.</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">6. Contact Us</h3>
+                <p>
+                    If you have questions regarding this Privacy Policy or wish to request data assistance, contact our privacy officer at <strong style="color: var(--text-main);">support@kashflow.app</strong>.
+                </p>
             </div>
         </div>
 
-        <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+        <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{{ url_for('delete_account_request') }}" class="btn btn-secondary" style="font-size: 0.85rem;">Account Deletion Portal</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary" style="font-size: 0.85rem;">Back to Dashboard</a>
         </div>
     </div>
 </div>

@@ -28,7 +28,8 @@ pages = [
     '/budgets',
     '/settings',
     '/privacy',
-    '/terms'
+    '/terms',
+    '/delete-account-request'
 ]
 
 all_ok = True
