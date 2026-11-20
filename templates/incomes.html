@@ -1,115 +1,88 @@
 {% extends "base.html" %}
 
-{% block title %}Incomes - KashFlow{% endblock %}
+{% block title %}Incomes — KashFlow{% endblock %}
 
 {% block content %}
-<!-- Income Metrics Overview -->
+<!-- Metrics Summary Header -->
 <section class="metrics-grid">
     <div class="metric-card">
-        <div class="metric-header">
-            <span>Total Income</span>
-            <div class="metric-icon icon-emerald">💰</div>
-        </div>
+        <div class="metric-label">Monthly Income</div>
         <div class="metric-value text-income">+${{ "%.2f"|format(stats.total_income) }}</div>
-        <div class="metric-sub">Total earned money</div>
+        <div class="metric-sub">Current month earnings</div>
     </div>
     <div class="metric-card">
-        <div class="metric-header">
-            <span>Income Entries</span>
-            <div class="metric-icon icon-cyan">📊</div>
-        </div>
+        <div class="metric-label">Logged Entries</div>
         <div class="metric-value">{{ stats.income_count }}</div>
         <div class="metric-sub">Total income transactions</div>
     </div>
     <div class="metric-card">
-        <div class="metric-header">
-            <span>Top Income Source</span>
-            <div class="metric-icon icon-amber">💼</div>
+        <div class="metric-label">Savings Rate</div>
+        <div class="metric-value">{{ stats.savings_rate }}%</div>
+        <div class="metric-sub">Portion of income saved</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Monthly Balance</div>
+        <div class="metric-value {{ 'text-income' if stats.net_balance >= 0 else 'text-expense' }}">
+            {{ '+' if stats.net_balance >= 0 else '' }}${{ "%.2f"|format(stats.net_balance) }}
         </div>
-        <div class="metric-value" style="font-size: 1.4rem;">{{ stats.top_income_category }}</div>
-        <div class="metric-sub">Highest earning category</div>
+        <div class="metric-sub">Net surplus / deficit</div>
     </div>
 </section>
 
-<!-- Income Visual Chart -->
-{% if incomes %}
-<section class="card" style="margin-bottom: 2rem;">
-    <div class="card-title">
-        <span>💡 Income Breakdown by Category</span>
-    </div>
-    <div style="position: relative; height: 260px;">
-        <canvas id="incomeChart"></canvas>
-    </div>
-</section>
-{% endif %}
-
-<!-- Incomes Table Section -->
+<!-- Income Records Section -->
 <section class="card">
-    <div class="card-title">
-        <span>Income Records</span>
-        <button type="button" class="btn-income open-income-modal-btn" style="font-size: 0.85rem;">+ Add Income</button>
-
+    <div class="card-header">
+        <h3 class="card-title">Income Records</h3>
+        <button type="button" class="btn btn-income open-income-modal-btn">+ Add Income</button>
     </div>
 
-    <!-- Controls Bar -->
-    <div class="controls-bar">
-        <div class="search-filter-group">
-            <div class="search-box">
-                <span>🔍</span>
-                <input type="text" id="tableSearchInput" placeholder="Search incomes...">
-            </div>
-            <select id="tableCategoryFilter" class="filter-select">
-                <option value="all">All Categories</option>
-                {% for cat in categories %}
-                    <option value="{{ cat }}">{{ cat }}</option>
-                {% endfor %}
-            </select>
-        </div>
+    <!-- Filter & Search Bar -->
+    <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+        <input type="text" class="form-control" id="tableSearchInput" placeholder="Search by description or notes..." style="flex: 2; min-width: 200px;">
+        <select class="form-control" id="tableCategoryFilter" style="flex: 1; min-width: 150px;">
+            <option value="all">All Categories</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+        </select>
     </div>
 
     <!-- Table -->
     {% if incomes %}
     <div class="table-responsive">
-        <table class="expense-table">
+        <table class="data-table">
             <thead>
                 <tr>
                     <th>Date</th>
                     <th>Description</th>
                     <th>Category</th>
-                    <th>Method/Source</th>
-                    <th>Amount</th>
+                    <th>Source</th>
+                    <th style="text-align: right;">Amount</th>
                     <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for i in incomes %}
-                <tr class="data-row" 
-                    data-description="{{ i.description|lower }}" 
-                    data-category="{{ i.category }}" 
+                <tr class="data-row"
+                    data-description="{{ i.description|lower }}"
+                    data-category="{{ i.category }}"
                     data-notes="{{ (i.notes or '')|lower }}">
-                    <td style="color: var(--text-muted); font-size: 0.9rem;">{{ i.date }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.82rem; white-space: nowrap;">{{ i.date }}</td>
                     <td>
                         <div style="font-weight: 600;">{{ i.description }}</div>
                         {% if i.notes %}
-                            <div style="font-size: 0.8rem; color: var(--text-muted);">{{ i.notes }}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">{{ i.notes }}</div>
                         {% endif %}
                     </td>
                     <td>
-                        {% set cat_lower = (i.category or 'salary')|lower %}
-                        {% set badge_class = 'badge-salary' %}
-                        {% if 'freelance' in cat_lower %}{% set badge_class = 'badge-freelance' %}
-                        {% elif 'invest' in cat_lower %}{% set badge_class = 'badge-investments' %}
-                        {% elif 'busin' in cat_lower %}{% set badge_class = 'badge-business' %}
-                        {% elif 'gift' in cat_lower %}{% set badge_class = 'badge-gifts' %}
-                        {% endif %}
-                        <span class="badge {{ badge_class }}">
-                            {{ i.category }}
-                        </span>
+                        <span class="badge badge-income">{{ i.category }}</span>
                     </td>
                     <td style="color: var(--text-muted); font-size: 0.85rem;">{{ i.source or 'Bank Transfer' }}</td>
-                    <td class="amount-text text-income">+${{ "%.2f"|format(i.amount) }}</td>
-                    <td style="text-align: right;">
-                        <button type="button" class="btn-secondary edit-income-modal-btn" style="padding: 0.35rem 0.65rem; font-size: 0.85rem;" 
+                    <td style="text-align: right; font-weight: 600;" class="text-income">
+                        +${{ "%.2f"|format(i.amount) }}
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <button type="button" class="btn btn-secondary edit-income-modal-btn" style="font-size: 0.78rem; padding: 0.25rem 0.55rem;"
                                 data-id="{{ i.id }}"
                                 data-description="{{ i.description }}"
                                 data-amount="{{ i.amount }}"
@@ -117,36 +90,28 @@
                                 data-date="{{ i.date }}"
                                 data-source="{{ i.source or 'Bank Transfer' }}"
                                 data-notes="{{ i.notes or '' }}">
-                            ✏️ Edit
+                            Edit
                         </button>
-                        <form action="{{ url_for('delete_income', id=i.id) }}" method="POST" style="display:inline;">
-                            <button type="submit" class="btn-danger" style="padding: 0.35rem 0.65rem; font-size: 0.85rem;">🗑️ Delete</button>
+                        <form action="{{ url_for('delete_income', id=i.id) }}" method="POST" style="display: inline; margin: 0;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-danger" style="font-size: 0.78rem; padding: 0.25rem 0.55rem;" onclick="return confirm('Delete this income?');">
+                                Delete
+                            </button>
                         </form>
-
                     </td>
                 </tr>
                 {% endfor %}
-                <tr id="noResultsRow" style="display: none;">
-                    <td colspan="6" class="empty-state">
-                        <div class="empty-state-icon">🔍</div>
-                        <p>No matching income records found.</p>
-                    </td>
-                </tr>
             </tbody>
         </table>
+        <div id="tableEmptySearchMsg" style="display: none; padding: 2rem; text-align: center; color: var(--text-muted);">
+            No incomes match your search query.
+        </div>
     </div>
     {% else %}
-    <div class="empty-state">
-        <div class="empty-state-icon">💵</div>
-        <h3>No income entries recorded yet</h3>
-        <p style="margin-top: 0.5rem;">Click "+ Add Income" above to record your earnings!</p>
+    <div style="padding: 3rem 1.5rem; text-align: center; color: var(--text-muted);">
+        <p style="font-size: 1rem; font-weight: 600; color: var(--text-main);">No incomes recorded yet</p>
+        <p style="font-size: 0.85rem; margin-top: 0.35rem;">Click "+ Add Income" above to log your salary, freelance, or other earnings.</p>
     </div>
     {% endif %}
 </section>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    window.chartIncomeData = {{ stats.income_chart | tojson }};
-</script>
 {% endblock %}

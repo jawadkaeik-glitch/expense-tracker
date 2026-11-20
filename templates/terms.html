@@ -1,45 +1,39 @@
 {% extends "base.html" %}
+
 {% block title %}Terms of Service — KashFlow{% endblock %}
 
 {% block content %}
-<div class="legal-container" style="max-width: 800px; margin: 2rem auto 4rem; padding: 0 1rem;">
-    <div class="card" style="padding: 2.5rem 2rem;">
-        <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            📜 Terms of Service
-        </h1>
-        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
-            Last Updated: July 2026 &nbsp;·&nbsp; KashFlow Financial Advisor
-        </p>
-
-        <div style="display: flex; flex-direction: column; gap: 1.5rem; font-size: 0.95rem; line-height: 1.7; color: var(--text-main);">
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">1. Acceptance of Terms</h3>
-                <p style="color: var(--text-muted);">By creating an account or accessing the KashFlow application, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use the service.</p>
-            </section>
-
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">2. Service Description & Financial Disclaimer</h3>
-                <p style="color: var(--text-muted);">KashFlow provides personal expense tracking, budget management, and algorithmic financial health scores for informational purposes only. KashFlow is an automated tracking tool and does not constitute certified financial, tax, or legal advice.</p>
-            </section>
-
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">3. Subscriptions & Billing</h3>
-                <p style="color: var(--text-muted);">KashFlow offers a Free tier and a Premium PRO subscription ($4.99/mo or $39.99/yr). Premium subscriptions renew automatically until cancelled. You can cancel your subscription at any time with 1 click from your <a href="{{ url_for('settings') }}" style="color: var(--accent-primary);">Account Settings</a> page.</p>
-            </section>
-
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">4. User Responsibilities</h3>
-                <p style="color: var(--text-muted);">You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account.</p>
-            </section>
-
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">5. Changes & Termination</h3>
-                <p style="color: var(--text-muted);">We reserve the right to modify or discontinue features of the application at any time. We may suspend or terminate accounts that violate these terms.</p>
-            </section>
+<div style="max-width: 760px; margin: 1.5rem auto;">
+    <div class="card">
+        <div class="card-header">
+            <h1 style="font-size: 1.4rem; font-weight: 700;">Terms of Service</h1>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Updated November 2026</span>
         </div>
 
-        <div style="margin-top: 2.5rem; text-align: center;">
-            <a href="{{ url_for('dashboard') }}" class="btn-secondary" style="padding: 0.75rem 2rem;">← Back to Dashboard</a>
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.92rem; line-height: 1.6; color: var(--text-muted);">
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">1. Acceptance of Terms</h3>
+                <p>By creating an account or accessing KashFlow, you agree to these Terms of Service. KashFlow is provided as a free financial management utility.</p>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">2. Informational Purposes Only</h3>
+                <p>KashFlow provides automated expense calculations, budget metrics, and daily allowance guidelines for informational and organizational convenience. It does not constitute certified financial, tax, or legal advisory services.</p>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">3. Free Service Commitment</h3>
+                <p>All core features of KashFlow—including unlimited expense logging, income tracking, recurring bill reminders, savings goals, category budget limits, and CSV data export—are provided completely free of charge.</p>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">4. Account Responsibility</h3>
+                <p>You are responsible for keeping your account credentials confidential. You may delete your account at any time through Account Settings.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
         </div>
     </div>
 </div>

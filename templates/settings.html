@@ -1,173 +1,97 @@
 {% extends "base.html" %}
-{% block title %}Account Settings & Profile — KashFlow{% endblock %}
+
+{% block title %}Account Settings — KashFlow{% endblock %}
 
 {% block content %}
-<div class="settings-container" style="max-width: 850px; margin: 0 auto; padding-bottom: 4rem;">
+<div style="max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
 
-    <!-- Page Header -->
-    <div class="settings-page-header" style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-        <div>
-            <h2 style="font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem;">
-                ⚙️ Account Settings & Profile
-            </h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
-                Manage your profile, password, subscription, and data privacy settings.
-            </p>
-        </div>
-        <div>
-            {% if is_premium %}
-                <span class="pricing-badge" style="font-size: 0.9rem; padding: 0.5rem 1rem;">⭐ Premium PRO Member</span>
-            {% else %}
-                <a href="{{ url_for('pricing') }}" class="btn-upgrade" style="font-size: 0.85rem;">⭐ Upgrade to Premium</a>
-            {% endif %}
-        </div>
+    <!-- Page Title -->
+    <div>
+        <h2 style="font-size: 1.4rem; font-weight: 700;">Account Settings</h2>
+        <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.25rem;">
+            Manage your personal profile, security credentials, and data privacy.
+        </p>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
-
-        <!-- 1. PROFILE INFORMATION CARD -->
-        <div class="card settings-card">
-            <div class="card-title" style="margin-bottom: 1.25rem;">
-                <span>👤 Profile Information</span>
-            </div>
-
-            <form action="{{ url_for('update_profile') }}" method="POST">
-                <div class="settings-grid-2">
-                    <div class="form-group">
-                        <label for="profileName" style="font-size: 0.85rem; font-weight: 600;">Display Name</label>
-                        <input type="text" id="profileName" name="name" value="{{ user.name }}" class="form-control" required style="padding: 0.65rem 0.85rem;">
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size: 0.85rem; font-weight: 600;">Email Address</label>
-                        <input type="email" value="{{ user.email }}" class="form-control" disabled style="opacity: 0.65; cursor: not-allowed; padding: 0.65rem 0.85rem;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; display: block;">Email cannot be changed directly.</span>
-                    </div>
-                </div>
-
-                <div class="settings-action-row" style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
-                    <button type="submit" class="btn-primary settings-btn-full" style="padding: 0.65rem 1.5rem; font-size: 0.9rem;">
-                        Save Profile Changes
-                    </button>
-                </div>
-            </form>
+    <!-- Profile Information Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Profile Information</h3>
         </div>
-
-        <!-- 2. SUBSCRIPTION & BILLING CARD -->
-        <div class="card settings-card" style="border: 1px solid {{ '#f59e0b' if is_premium else 'var(--border-color)' }};">
-            <div class="card-title" style="margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
-                <span>💳 Subscription & Plan Management</span>
-                {% if is_premium %}
-                    <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">Active Plan: Premium PRO</span>
-                {% else %}
-                    <span class="badge badge-general">Active Plan: Free</span>
-                {% endif %}
+        <form action="{{ url_for('settings') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="action" value="update_profile"/>
+            <div class="form-group">
+                <label class="form-label" for="name">Full Name</label>
+                <input type="text" id="name" name="name" class="form-control" value="{{ user.name }}" required>
             </div>
-
-            {% if is_premium %}
-                <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
-                    <h4 style="font-weight: 700; color: #fbbf24; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        ⭐ You have full access to KashFlow Premium!
-                    </h4>
-                    <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;">
-                        Your plan unlocks Category Budgets, Savings Goals, Bills Tracker, Advanced Charts, and CSV Exports.
-                    </p>
-                </div>
-
-                <div class="settings-flex-row" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                        <div style="font-weight: 600; font-size: 0.95rem;">Want to cancel or leave Premium?</div>
-                        <div style="font-size: 0.82rem; color: var(--text-muted);">Cancelling will revert your account back to the Free plan. Your income & expense records remain safe.</div>
-                    </div>
-                    <form action="{{ url_for('cancel_subscription') }}" method="POST" class="settings-btn-wrapper" onsubmit="return confirm('Are you sure you want to cancel your Premium subscription?');">
-                        <button type="submit" class="btn-danger settings-btn-full" style="padding: 0.65rem 1.25rem; font-size: 0.88rem;">
-                            🚪 Cancel Subscription
-                        </button>
-                    </form>
-                </div>
-            {% else %}
-                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
-                    <h4 style="font-weight: 700; margin-bottom: 0.35rem;">Currently on the Free Plan</h4>
-                    <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;">
-                        Upgrade to Premium ($4.99/mo or $39.99/yr) to unlock Category Budget Limits, Savings Goals, Bills Reminders, Advanced MoM Analytics, and CSV Data Export.
-                    </p>
-                </div>
-
-                <div class="settings-flex-row" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">
-                        Instant activation &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; No commitments
-                    </div>
-                    <a href="{{ url_for('pricing') }}" class="btn-upgrade settings-btn-full" style="padding: 0.65rem 1.5rem; font-size: 0.95rem; justify-content: center;">
-                        ⭐ View Premium Plans →
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- 3. SECURITY & PASSWORD CARD -->
-        <div class="card settings-card">
-            <div class="card-title" style="margin-bottom: 1.25rem;">
-                <span>🔒 Security & Change Password</span>
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required>
             </div>
-
-            <form action="{{ url_for('change_password') }}" method="POST">
-                <div class="settings-grid-3">
-                    <div class="form-group">
-                        <label for="currentPass" style="font-size: 0.85rem; font-weight: 600;">Current Password</label>
-                        <input type="password" id="currentPass" name="current_password" class="form-control" required placeholder="••••••••" style="padding: 0.65rem 0.85rem;">
-                    </div>
-                    <div class="form-group">
-                        <label for="newPass" style="font-size: 0.85rem; font-weight: 600;">New Password</label>
-                        <input type="password" id="newPass" name="new_password" class="form-control" required placeholder="Min 8 characters" style="padding: 0.65rem 0.85rem;">
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPass" style="font-size: 0.85rem; font-weight: 600;">Confirm New Password</label>
-                        <input type="password" id="confirmPass" name="confirm_password" class="form-control" required placeholder="Repeat new password" style="padding: 0.65rem 0.85rem;">
-                    </div>
-                </div>
-
-                <div class="settings-action-row" style="margin-top: 1.25rem; display: flex; justify-content: flex-end;">
-                    <button type="submit" class="btn-secondary settings-btn-full" style="padding: 0.65rem 1.5rem; font-size: 0.9rem;">
-                        Update Password
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- 4. DATA & DATA PRIVACY CARD -->
-        <div class="card settings-card">
-            <div class="card-title" style="margin-bottom: 1.25rem;">
-                <span>📦 Data Management & Export</span>
+            <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
             </div>
-
-            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-                <div class="settings-flex-row" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                        <div style="font-weight: 600; font-size: 0.95rem;">Export Financial Data (CSV)</div>
-                        <div style="font-size: 0.82rem; color: var(--text-muted);">Download a complete spreadsheet backup of all your transactions.</div>
-                    </div>
-                    {% if is_premium %}
-                        <a href="{{ url_for('export_csv') }}" class="btn-secondary settings-btn-full" style="padding: 0.65rem 1.25rem; font-size: 0.88rem; justify-content: center;">
-                            📥 Download CSV
-                        </a>
-                    {% else %}
-                        <a href="{{ url_for('pricing') }}" class="btn-secondary settings-btn-full" style="padding: 0.65rem 1.25rem; font-size: 0.88rem; opacity: 0.7; justify-content: center;">
-                            🔒 Premium Feature
-                        </a>
-                    {% endif %}
-                </div>
-
-                <div class="settings-flex-row" style="border-top: 1px dashed var(--border-color); padding-top: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                        <div style="font-weight: 600; font-size: 0.95rem; color: var(--accent-expense);">Reset Account Transactions</div>
-                        <div style="font-size: 0.82rem; color: var(--text-muted);">Wipe all expenses, incomes, bills, and goals to start fresh.</div>
-                    </div>
-                    <a href="{{ url_for('reset_clean') }}" class="btn-danger settings-btn-full" style="padding: 0.65rem 1.25rem; font-size: 0.88rem; justify-content: center;" onclick="return confirm('Are you sure you want to reset all your data? This action cannot be undone!');">
-                        🧹 Reset Data
-                    </a>
-                </div>
-            </div>
-        </div>
-
+        </form>
     </div>
+
+    <!-- Security & Password Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Change Password</h3>
+        </div>
+        <form action="{{ url_for('settings') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="action" value="update_password"/>
+            <div class="form-group">
+                <label class="form-label" for="current_password">Current Password</label>
+                <input type="password" id="current_password" name="current_password" class="form-control" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="new_password">New Password (min 8 chars)</label>
+                    <input type="password" id="new_password" name="new_password" class="form-control" minlength="8" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm New Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" minlength="8" required>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary">Update Password</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Data Portability & Export -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Export Your Data</h3>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Download all your recorded income and expense transactions in a standard CSV spreadsheet format.
+        </p>
+        <a href="{{ url_for('export_csv') }}" class="btn btn-secondary">Download CSV Export</a>
+    </div>
+
+    <!-- Danger Zone: Account Deletion -->
+    <div class="card" style="border-color: rgba(225, 29, 72, 0.3);">
+        <div class="card-header">
+            <h3 class="card-title" style="color: var(--color-expense);">Delete Account</h3>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Permanently delete your account and all associated transactions, bills, goals, and budgets. This action cannot be undone.
+        </p>
+        <form action="{{ url_for('settings') }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete your account and all financial records? This action cannot be reversed.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="action" value="delete_account"/>
+            <div class="form-group">
+                <label class="form-label" for="password_confirm">Confirm Password to Delete Account</label>
+                <input type="password" id="password_confirm" name="password_confirm" class="form-control" placeholder="Enter your current password" required style="max-width: 300px;">
+            </div>
+            <button type="submit" class="btn btn-danger">Permanently Delete Account</button>
+        </form>
+    </div>
+
 </div>
 {% endblock %}

@@ -1,362 +1,277 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="KashFlow">
+    <title>{% block title %}KashFlow — Personal Finance Advisor{% endblock %}</title>
+
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+
+    <!-- Typography & Chart.js -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Unified Minimalist Stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/premium.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 </head>
 <body>
 <div class="app-container">
 
-    <!-- ===== HEADER (Simplified) ===== -->
-    <header>
-        <a href="{{ url_for('dashboard') }}" class="brand" style="text-decoration:none; display:flex; align-items:center; gap:0.6rem;">
-            <img src="{{ url_for('static', filename='icons/icon-192.png') }}" alt="KashFlow Logo" style="width:34px; height:34px; border-radius:9px; box-shadow:0 4px 12px rgba(16,185,129,0.35);">
-            <div><h1 class="brand-title">KashFlow</h1></div>
-
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+        <a href="{{ url_for('dashboard') }}" class="brand">
+            <div class="brand-icon">K</div>
+            <span>KashFlow</span>
         </a>
 
-
+        {% if current_user %}
         <nav class="nav-links">
-            <a href="{{ url_for('dashboard') }}"    class="nav-link {% if request.path in ['/', '/dashboard'] %}active{% endif %}">Overview</a>
-            <a href="{{ url_for('list_incomes') }}"  class="nav-link {% if '/income' in request.path %}active{% endif %}">Incomes</a>
-            <a href="{{ url_for('list_expenses') }}" class="nav-link {% if '/expense' in request.path %}active{% endif %}">Expenses</a>
-            <a href="{{ url_for('list_bills') }}"    class="nav-link {% if '/bill' in request.path %}active{% endif %}">
-                Bills {% if not is_premium %}<span class="pro-badge">PRO</span>{% endif %}
-            </a>
-            <a href="{{ url_for('list_goals') }}"    class="nav-link {% if '/goal' in request.path %}active{% endif %}">
-                Goals {% if not is_premium %}<span class="pro-badge">PRO</span>{% endif %}
-            </a>
-            <a href="{{ url_for('list_budgets') }}"  class="nav-link {% if '/budget' in request.path %}active{% endif %}">
-                Budgets {% if not is_premium %}<span class="pro-badge">PRO</span>{% endif %}
-            </a>
+            <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.path in ['/', '/dashboard'] %}active{% endif %}">Overview</a>
+            <a href="{{ url_for('list_incomes') }}" class="nav-link {% if '/income' in request.path %}active{% endif %}">Incomes</a>
+            <a href="{{ url_for('list_expenses') }}" class="nav-link {% if '/expense' in request.path or request.path == '/add' %}active{% endif %}">Expenses</a>
+            <a href="{{ url_for('list_bills') }}" class="nav-link {% if '/bill' in request.path %}active{% endif %}">Bills</a>
+            <a href="{{ url_for('list_goals') }}" class="nav-link {% if '/goal' in request.path %}active{% endif %}">Goals</a>
+            <a href="{{ url_for('list_budgets') }}" class="nav-link {% if '/budget' in request.path %}active{% endif %}">Budgets</a>
         </nav>
+        {% endif %}
 
         <div class="header-actions">
-            <button type="button" class="theme-toggle-btn" id="themeToggleBtn">☀️ Light</button>
-            {% if is_premium %}
-                <a href="{{ url_for('export_csv') }}" class="btn-secondary" style="font-size:0.85rem;">📥 Export CSV</a>
-            {% else %}
-                <a href="{{ url_for('pricing') }}" class="btn-upgrade">⭐ Upgrade</a>
-            {% endif %}
-            <button type="button" class="btn-income" id="openAddIncomeModalBtn">+ Income</button>
-            <button type="button" class="btn-primary" id="openAddModalBtn">+ Expense</button>
-            <!-- User Avatar Dropdown -->
+            <!-- Theme Toggle -->
+            <button type="button" class="btn-icon" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle Theme">
+                <span id="themeToggleIcon">🌙</span>
+            </button>
+
             {% if current_user %}
-            <div class="user-avatar-wrapper" style="position: relative;">
-                <button type="button" class="user-avatar-btn" id="userAvatarBtn" aria-haspopup="true" aria-expanded="false">
-                    <div class="user-initials">{{ current_user.name[0].upper() }}</div>
+            <button type="button" class="btn btn-income" id="openAddIncomeModalBtn">+ Income</button>
+            <button type="button" class="btn btn-primary" id="openAddModalBtn">+ Expense</button>
+
+            <!-- User Menu -->
+            <div class="user-menu-wrapper">
+                <button type="button" class="user-btn" id="userAvatarBtn" aria-expanded="false" aria-haspopup="true">
+                    <div class="user-avatar">{{ current_user.name[0].upper() }}</div>
                     <span>{{ current_user.name.split()[0] }}</span>
-                    <span style="font-size:0.7rem;color:var(--text-muted)">▾</span>
+                    <span style="font-size:0.75rem; opacity:0.6;">▾</span>
                 </button>
-                <div class="user-dropdown" id="userDropdown">
-                    <div style="padding:0.75rem 1rem;font-size:0.8rem;color:var(--text-muted);border-bottom:1px solid var(--border-color);">
-                        <div style="font-weight:600;color:var(--text-main);">{{ current_user.name }}</div>
-                        <div style="font-size:0.78rem;">{{ current_user.email }}</div>
+                <div class="dropdown-menu" id="userDropdown">
+                    <div style="padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.35rem;">
+                        <div style="font-weight: 600; font-size: 0.88rem;">{{ current_user.name }}</div>
+                        <div style="font-size: 0.76rem; color: var(--text-muted);">{{ current_user.email }}</div>
                     </div>
-                    {% if is_premium %}
-                        <div style="padding:0.5rem 1rem;font-size:0.78rem;color:#fbbf24;font-weight:700;display:flex;align-items:center;gap:0.35rem;">
-                            ⭐ Premium PRO Active
-                        </div>
-                    {% else %}
-                        <a href="{{ url_for('pricing') }}" class="user-dropdown-item" style="color:#fbbf24;font-weight:600;">
-                            ⭐ Upgrade to Premium
-                        </a>
-                    {% endif %}
-                    <div class="user-dropdown-divider"></div>
-                    <button type="button" class="user-dropdown-item" id="menuThemeToggleBtn" style="width:100%; text-align:left; background:none; border:none; cursor:pointer; font-family:inherit;">☀️ Switch Theme</button>
-                    <a href="{{ url_for('settings') }}" class="user-dropdown-item">⚙️ Account Settings</a>
-                    <a href="{{ url_for('pricing') }}" class="user-dropdown-item">💳 Plan & Billing</a>
-                    <div class="user-dropdown-divider"></div>
-                    <a href="{{ url_for('logout') }}" class="user-dropdown-item danger">🚪 Sign Out</a>
+                    <a href="{{ url_for('export_csv') }}" class="dropdown-item">Export CSV</a>
+                    <a href="{{ url_for('settings') }}" class="dropdown-item">Settings</a>
+                    <div class="dropdown-divider"></div>
+                    <form action="{{ url_for('logout') }}" method="POST" style="margin: 0;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="dropdown-item danger" style="width: 100%; text-align: left;">Sign Out</button>
+                    </form>
                 </div>
             </div>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-secondary">Sign In</a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary">Get Started</a>
             {% endif %}
-
-
         </div>
     </header>
 
-    <!-- Flash Toast Messages -->
+    <!-- Flash Alert Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <div class="flash-messages">
           {% for category, message in messages %}
-            <div class="toast {{ 'toast-error' if category == 'error' else 'toast-success' }}">
-                <span>{{ '⚠️' if category == 'error' else '✅' }} {{ message }}</span>
+            <div class="alert {{ 'alert-error' if category == 'error' else 'alert-success' }}">
+                <span>{{ message }}</span>
             </div>
           {% endfor %}
         </div>
       {% endif %}
     {% endwith %}
 
-    <!-- Main Content -->
-    <main>{% block content %}{% endblock %}</main>
+    <!-- Main Content Slot -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
 
-    <!-- ===== FOOTER (Legal & Dev Tools) ===== -->
-    <footer class="app-footer" style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); text-align: center;">
-        <div style="display: flex; justify-content: center; gap: 1.5rem; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-            <a href="{{ url_for('privacy') }}" style="color: var(--text-muted); text-decoration: none;">🛡️ Privacy Policy</a>
+    <!-- App Footer -->
+    <footer class="app-footer">
+        <div class="footer-links">
+            <a href="{{ url_for('privacy') }}">Privacy Policy</a>
             <span>·</span>
-            <a href="{{ url_for('terms') }}" style="color: var(--text-muted); text-decoration: none;">📜 Terms of Service</a>
-            <span>·</span>
-            <a href="{{ url_for('pricing') }}" style="color: var(--text-muted); text-decoration: none;">⭐ Pricing & Plans</a>
+            <a href="{{ url_for('terms') }}">Terms of Service</a>
         </div>
-        <p style="color: var(--text-muted); font-size: 0.78rem;">© 2026 KashFlow Inc. All rights reserved.</p>
-
+        <div>KashFlow &copy; {{ now.year if now else '2026' }} &middot; 100% Free Personal Finance</div>
     </footer>
+
 </div>
-
-
-
-<!-- ===== FLOATING ACTION BUTTON ===== -->
-<div class="fab-container" id="fabContainer">
-    <button class="fab-main" id="fabMain" title="Quick Add">+</button>
-    <div class="fab-options" id="fabOptions">
-        <button class="fab-option" id="fabAddExpense">
-            <span class="fab-option-label">Add Expense</span>
-            <span class="fab-option-icon fab-icon-expense">💸</span>
-        </button>
-        <button class="fab-option" id="fabAddIncome">
-            <span class="fab-option-label">Add Income</span>
-            <span class="fab-option-icon fab-icon-income">💰</span>
-        </button>
-    </div>
-</div>
-
-<!-- ===== EXPENSE MODAL ===== -->
-<div class="modal-backdrop" id="expenseModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modalTitle">Add Expense</h2>
-            <button type="button" class="close-modal-btn close-modal-trigger">&times;</button>
-        </div>
-        <form id="modalExpenseForm" method="POST" action="/add">
-            {% if stats and stats.last_expense %}
-            <button type="button" id="repeatLastSpendBtn" class="btn-secondary" 
-                    data-desc="{{ stats.last_expense.description }}" 
-                    data-amt="{{ stats.last_expense.amount }}" 
-                    data-cat="{{ stats.last_expense.category }}"
-                    style="width: 100%; margin-bottom: 1rem; font-size: 0.82rem; padding: 0.55rem; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08); color: var(--text-main); font-weight: 600; justify-content: center; border-radius: var(--radius-sm);">
-                ⚡ Repeat Last Spend: {{ stats.last_expense.description }} (${{ "%.2f"|format(stats.last_expense.amount) }})
-            </button>
-            {% endif %}
-
-            <div class="form-grid">
-                <div class="form-group full-width">
-                    <label for="modalDescription">What did you spend on? *</label>
-                    <input type="text" id="modalDescription" name="description" class="form-control" placeholder="e.g. Coffee, Rent, Groceries" required autofocus>
-                </div>
-                <div class="form-group">
-                    <label for="modalAmount">Amount ($) *</label>
-                    <input type="number" step="0.01" min="0.01" id="modalAmount" name="amount" class="form-control" placeholder="0.00" required>
-                </div>
-                <div class="form-group">
-                    <label for="modalCategory">Category</label>
-                    <select id="modalCategory" name="category" class="form-control">
-                        <option value="Food">🍔 Food</option>
-                        <option value="Transportation">🚗 Transportation</option>
-                        <option value="Housing">🏠 Housing</option>
-                        <option value="Shopping">🛍️ Shopping</option>
-                        <option value="Utilities">💡 Utilities</option>
-                        <option value="Health">❤️ Health</option>
-                        <option value="General">📦 General</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Quick Emoji Category Chips for <5s Logging -->
-            <div style="margin-top: 0.75rem; margin-bottom: 1rem;">
-                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.35rem; display: block;">Quick Emoji Chips:</label>
-                <div class="category-chips-grid" style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-                    <button type="button" class="quick-chip-btn" data-cat="Food">🍔 Food</button>
-                    <button type="button" class="quick-chip-btn" data-cat="Transportation">🚗 Transport</button>
-                    <button type="button" class="quick-chip-btn" data-cat="Shopping">🛍️ Shopping</button>
-                    <button type="button" class="quick-chip-btn" data-cat="Food" data-desc="Coffee">☕ Coffee</button>
-                    <button type="button" class="quick-chip-btn" data-cat="Utilities">💡 Utilities</button>
-                    <button type="button" class="quick-chip-btn" data-cat="General">📦 General</button>
-                </div>
-            </div>
-
-
-            <!-- Advanced toggle -->
-            <button type="button" class="advanced-toggle" id="expenseAdvancedToggle">
-                <span id="expenseAdvancedArrow">▸</span> Advanced options
-            </button>
-            <div class="form-grid">
-                <div class="advanced-fields" id="expenseAdvancedFields">
-                    <div class="form-group">
-                        <label for="modalDate">Date</label>
-                        <input type="date" id="modalDate" name="date" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="modalPaymentMethod">Payment Method</label>
-                        <select id="modalPaymentMethod" name="payment_method" class="form-control">
-                            <option value="Card">Card</option>
-                            <option value="Cash">Cash</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Check">Check</option>
-                            <option value="Crypto">Crypto</option>
-                        </select>
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="modalNotes">Notes</label>
-                        <input type="text" id="modalNotes" name="notes" class="form-control" placeholder="Optional notes...">
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-actions">
-                <button type="button" class="btn-secondary close-modal-trigger">Cancel</button>
-                <button type="submit" class="btn-primary" id="modalSubmitBtn">Save Expense</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ===== INCOME MODAL ===== -->
-<div class="modal-backdrop" id="incomeModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modalIncomeTitle">Add Income</h2>
-            <button type="button" class="close-modal-btn close-modal-trigger">&times;</button>
-        </div>
-        <form id="modalIncomeForm" method="POST" action="/add-income">
-            <div class="form-grid">
-                <div class="form-group full-width">
-                    <label for="modalIncomeDescription">Where did the money come from? *</label>
-                    <input type="text" id="modalIncomeDescription" name="description" class="form-control" placeholder="e.g. Monthly Salary, Freelance, Gift" required autofocus>
-                </div>
-                <div class="form-group">
-                    <label for="modalIncomeAmount">Amount ($) *</label>
-                    <input type="number" step="0.01" min="0.01" id="modalIncomeAmount" name="amount" class="form-control" placeholder="0.00" required>
-                </div>
-                <div class="form-group">
-                    <label for="modalIncomeCategory">Category</label>
-                    <select id="modalIncomeCategory" name="category" class="form-control">
-                        <option value="Salary">💼 Salary</option>
-                        <option value="Freelance">💻 Freelance</option>
-                        <option value="Investments">📈 Investments</option>
-                        <option value="Business">🏢 Business</option>
-                        <option value="Gifts & Grants">🎁 Gifts & Grants</option>
-                        <option value="Rental">🏘️ Rental</option>
-                        <option value="Other">📦 Other</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Advanced toggle -->
-            <button type="button" class="advanced-toggle" id="incomeAdvancedToggle">
-                <span id="incomeAdvancedArrow">▸</span> Advanced options
-            </button>
-            <div class="form-grid">
-                <div class="advanced-fields" id="incomeAdvancedFields">
-                    <div class="form-group">
-                        <label for="modalIncomeDate">Date</label>
-                        <input type="date" id="modalIncomeDate" name="date" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="modalIncomeSource">Payout Method</label>
-                        <select id="modalIncomeSource" name="source" class="form-control">
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Direct Deposit">Direct Deposit</option>
-                            <option value="Cash">Cash</option>
-                            <option value="Check">Check</option>
-                            <option value="Crypto">Crypto</option>
-                        </select>
-                    </div>
-                    <div class="form-group full-width">
-                        <label for="modalIncomeNotes">Notes</label>
-                        <input type="text" id="modalIncomeNotes" name="notes" class="form-control" placeholder="Optional notes...">
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-actions">
-                <button type="button" class="btn-secondary close-modal-trigger">Cancel</button>
-                <button type="submit" class="btn-income" id="modalIncomeSubmitBtn">Save Income</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ===== MOBILE QUICK ADD ACTION SHEET ===== -->
-<div class="modal-backdrop" id="quickAddChoiceModal">
-
-    <div class="modal-content" style="max-width: 380px; text-align: center; padding: 1.75rem; border-radius: var(--radius-lg);">
-        <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.35rem; color: var(--text-main);">⚡ Add New Entry</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Choose what you would like to log:</p>
-
-        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-            <button type="button" id="choiceAddExpenseBtn" class="btn-primary" style="padding: 0.85rem 1rem; justify-content: center; font-size: 1rem; width: 100%; border-radius: var(--radius-md); font-weight: 700;">
-                💸 + Add Expense
-            </button>
-            <button type="button" id="choiceAddIncomeBtn" class="btn-income" style="padding: 0.85rem 1rem; justify-content: center; font-size: 1rem; width: 100%; border-radius: var(--radius-md); font-weight: 700;">
-                💰 + Add Income
-            </button>
-        </div>
-
-        <button type="button" class="btn-secondary close-modal-trigger" style="margin-top: 1.25rem; width: 100%; justify-content: center; font-size: 0.9rem;">
-            Close
-        </button>
-    </div>
-</div>
-
-
-<!-- ===== MOBILE BOTTOM NAVIGATION BAR ===== -->
 
 {% if current_user %}
+<!-- Mobile Bottom Navigation Bar -->
 <nav class="mobile-bottom-nav">
     <a href="{{ url_for('dashboard') }}" class="mobile-nav-item {% if request.path in ['/', '/dashboard'] %}active{% endif %}">
-        <div class="mobile-nav-icon">🏠</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         <span>Overview</span>
     </a>
-    <a href="{{ url_for('list_expenses') }}" class="mobile-nav-item {% if '/expense' in request.path %}active{% endif %}">
-        <div class="mobile-nav-icon">💸</div>
-        <span>Expenses</span>
-    </a>
-    <button type="button" class="mobile-nav-item mobile-add-btn" id="openQuickAddChoiceBtn" style="background:none;border:none;padding:0;">
-        <div class="mobile-add-circle">+</div>
-        <span style="font-size:0.68rem;">Quick Add</span>
-    </button>
-
     <a href="{{ url_for('list_incomes') }}" class="mobile-nav-item {% if '/income' in request.path %}active{% endif %}">
-        <div class="mobile-nav-icon">💰</div>
-        <span>Incomes</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+        <span>Income</span>
     </a>
-    <a href="{{ url_for('settings') }}" class="mobile-nav-item {% if '/settings' in request.path or '/pricing' in request.path or '/budget' in request.path or '/bill' in request.path or '/goal' in request.path %}active{% endif %}">
-        <div class="mobile-nav-icon">⚙️</div>
-        <span>Menu</span>
+    <button type="button" class="mobile-fab-center" id="openQuickAddChoiceBtn" aria-label="Quick Add" title="Quick Add">
+        +
+    </button>
+    <a href="{{ url_for('list_expenses') }}" class="mobile-nav-item {% if '/expense' in request.path %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
+        <span>Expense</span>
+    </a>
+    <a href="{{ url_for('list_budgets') }}" class="mobile-nav-item {% if request.path in ['/budgets', '/bills', '/goals', '/settings'] %}active{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>More</span>
     </a>
 </nav>
+
+<!-- Quick Add Choice Modal / Action Sheet -->
+<div class="modal-backdrop" id="quickAddChoiceModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title">New Transaction</h3>
+            <button type="button" class="btn-icon close-modal-trigger">&times;</button>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">Choose what you would like to record:</p>
+        <div class="action-sheet-options">
+            <button type="button" class="action-sheet-btn" id="choiceAddExpenseBtn">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <span style="color:var(--color-expense); font-size:1.2rem;">&minus;</span>
+                    <span>Add Expense</span>
+                </div>
+                <span style="color:var(--text-dim);">&rarr;</span>
+            </button>
+            <button type="button" class="action-sheet-btn" id="choiceAddIncomeBtn">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <span style="color:var(--color-income); font-size:1.2rem;">&plus;</span>
+                    <span>Add Income</span>
+                </div>
+                <span style="color:var(--text-dim);">&rarr;</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal-backdrop" id="expenseModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">Add Expense</h3>
+            <button type="button" class="btn-icon close-modal-trigger">&times;</button>
+        </div>
+        <form action="{{ url_for('add_expense') }}" method="POST" id="modalExpenseForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="form-group">
+                <label class="form-label" for="modalDescription">Description</label>
+                <input type="text" class="form-control" id="modalDescription" name="description" placeholder="e.g. Groceries, Coffee" required autocomplete="off">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="modalAmount">Amount ($)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="modalAmount" name="amount" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modalCategory">Category</label>
+                    <select class="form-control" id="modalCategory" name="category">
+                        {% for cat in expense_categories or ['Food', 'Transportation', 'Housing', 'Shopping', 'Utilities', 'Health', 'General'] %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="modalDate">Date</label>
+                    <input type="date" class="form-control" id="modalDate" name="date" value="{{ today }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modalPaymentMethod">Payment Method</label>
+                    <select class="form-control" id="modalPaymentMethod" name="payment_method">
+                        {% for pm in payment_methods or ['Card', 'Cash', 'Bank Transfer', 'Check', 'Crypto'] %}
+                        <option value="{{ pm }}">{{ pm }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="modalNotes">Notes (Optional)</label>
+                <input type="text" class="form-control" id="modalNotes" name="notes" placeholder="Additional details...">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:1.25rem;">
+                <button type="button" class="btn btn-secondary close-modal-trigger">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="modalSubmitBtn">Save Expense</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Income Modal -->
+<div class="modal-backdrop" id="incomeModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalIncomeTitle">Add Income</h3>
+            <button type="button" class="btn-icon close-modal-trigger">&times;</button>
+        </div>
+        <form action="{{ url_for('add_income') }}" method="POST" id="modalIncomeForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="form-group">
+                <label class="form-label" for="modalIncomeDescription">Description</label>
+                <input type="text" class="form-control" id="modalIncomeDescription" name="description" placeholder="e.g. Monthly Salary, Freelance" required autocomplete="off">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="modalIncomeAmount">Amount ($)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control" id="modalIncomeAmount" name="amount" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modalIncomeCategory">Category</label>
+                    <select class="form-control" id="modalIncomeCategory" name="category">
+                        {% for cat in income_categories or ['Salary', 'Freelance', 'Investments', 'Business', 'Gifts & Grants', 'Rental', 'Other'] %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="modalIncomeDate">Date</label>
+                    <input type="date" class="form-control" id="modalIncomeDate" name="date" value="{{ today }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modalIncomeSource">Source</label>
+                    <select class="form-control" id="modalIncomeSource" name="source">
+                        {% for pm in payment_methods or ['Card', 'Cash', 'Bank Transfer', 'Check', 'Crypto'] %}
+                        <option value="{{ pm }}">{{ pm }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="modalIncomeNotes">Notes (Optional)</label>
+                <input type="text" class="form-control" id="modalIncomeNotes" name="notes" placeholder="Additional details...">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:1.25rem;">
+                <button type="button" class="btn btn-secondary close-modal-trigger">Cancel</button>
+                <button type="submit" class="btn btn-income" id="modalIncomeSubmitBtn">Save Income</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endif %}
 
+<!-- Client Interaction JS -->
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/static/sw.js')
-        .then(reg => console.log('KashFlow PWA ServiceWorker registered:', reg.scope))
-        .catch(err => console.log('ServiceWorker registration failed:', err));
-    });
-  }
-</script>
-{% block scripts %}{% endblock %}
 </body>
 </html>
-
-

@@ -1,53 +1,41 @@
 {% extends "base.html" %}
 
-{% block title %}Upcoming Bills - KashFlow{% endblock %}
+{% block title %}Bills & Subscriptions — KashFlow{% endblock %}
 
 {% block content %}
-{% if not is_premium %}
-<div class="premium-gate-page">
-    <span class="gate-icon">🔒</span>
-    <h2>Bills & Subscriptions is a Premium Feature</h2>
-    <p>Never miss a payment again. Track all your recurring bills and subscriptions with automatic due-date reminders and one-tap "Mark Paid" — available exclusively on Premium.</p>
-    <ul class="pricing-features-preview">
-        <li><span class="check-icon">✓</span> Track rent, utilities, subscriptions</li>
-        <li><span class="check-icon">✓</span> See unpaid bills on your dashboard</li>
-        <li><span class="check-icon">✓</span> Automatic bill impact on daily spending limit</li>
-        <li><span class="check-icon">✓</span> One-tap Mark Paid</li>
-    </ul>
-    <a href="{{ url_for('pricing') }}" class="btn-upgrade" style="font-size:1rem; padding:0.75rem 1.5rem;">⭐ Unlock Premium — $4.99/mo</a>
-    <div style="margin-top:0.85rem;"><a href="{{ url_for('dashboard') }}" style="color:var(--text-muted);font-size:0.85rem;">Back to Dashboard</a></div>
-</div>
-{% else %}
-<div class="card" style="margin-bottom: 2rem;">
-    <div class="card-title">
-        <span>➕ Add Upcoming Bill / Subscription</span>
+<!-- Add Bill Card -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <h3 class="card-title">Add Recurring Bill or Subscription</h3>
     </div>
-    <form method="POST" action="/add-bill">
-        <div class="form-grid">
-            <div class="form-group">
-                <label for="name">Bill / Subscription Name *</label>
-                <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Electricity, Netflix, Gym" required>
+    <form method="POST" action="{{ url_for('add_bill') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.85rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="name">Bill Name</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Rent, Electricity, Internet" required>
             </div>
-            <div class="form-group">
-                <label for="amount">Amount ($) *</label>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="amount">Amount ($)</label>
                 <input type="number" step="0.01" min="0.01" id="amount" name="amount" class="form-control" placeholder="0.00" required>
             </div>
-            <div class="form-group">
-                <label for="category">Category</label>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="category">Category</label>
                 <select id="category" name="category" class="form-control">
                     <option value="Utilities">Utilities</option>
                     <option value="Housing">Housing</option>
                     <option value="Subscriptions">Subscriptions</option>
                     <option value="Insurance">Insurance</option>
                     <option value="Debt">Debt Repayment</option>
+                    <option value="General">General</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="due_date">Due Date</label>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="due_date">Due Date</label>
                 <input type="date" id="due_date" name="due_date" class="form-control" value="{{ today }}">
             </div>
-            <div class="form-group">
-                <label for="recurring">Recurring Frequency</label>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="recurring">Frequency</label>
                 <select id="recurring" name="recurring" class="form-control">
                     <option value="Monthly">Monthly</option>
                     <option value="Yearly">Yearly</option>
@@ -56,51 +44,60 @@
                 </select>
             </div>
         </div>
-        <div class="form-actions">
-            <button type="submit" class="btn-primary">Add Bill</button>
+        <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary">Save Bill</button>
         </div>
     </form>
 </div>
 
+<!-- Bills List -->
 <div class="card">
-    <div class="card-title">
-        <span>📅 Upcoming Bills & Subscriptions List</span>
+    <div class="card-header">
+        <h3 class="card-title">Tracked Bills</h3>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">
+            Unpaid Total: ${{ "%.2f"|format(stats.unpaid_bills) }}
+        </span>
     </div>
+
     {% if bills %}
     <div class="table-responsive">
-        <table class="expense-table">
+        <table class="data-table">
             <thead>
                 <tr>
-                    <th>Status</th>
-                    <th>Name</th>
+                    <th>Bill Name</th>
                     <th>Category</th>
-                    <th>Due Date</th>
                     <th>Frequency</th>
+                    <th>Due Date</th>
                     <th>Amount</th>
+                    <th>Status</th>
                     <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for b in bills %}
                 <tr>
+                    <td style="font-weight: 600;">{{ b.name }}</td>
+                    <td><span class="badge badge-warning">{{ b.category }}</span></td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ b.recurring }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ b.due_date }}</td>
+                    <td style="font-weight: 600;">${{ "%.2f"|format(b.amount) }}</td>
                     <td>
-                        <span class="badge {{ 'badge-salary' if b.is_paid else 'badge-type-expense' }}">
-                            {{ '✅ Paid' if b.is_paid else '⏳ Due' }}
+                        <span class="badge {{ 'badge-income' if b.is_paid else 'badge-expense' }}">
+                            {{ 'Paid' if b.is_paid else 'Unpaid' }}
                         </span>
                     </td>
-                    <td style="font-weight: 600;">{{ b.name }}</td>
-                    <td><span class="badge badge-general">{{ b.category }}</span></td>
-                    <td style="color: var(--text-muted); font-size: 0.9rem;">{{ b.due_date }}</td>
-                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ b.recurring }}</td>
-                    <td class="amount-text">${{ "%.2f"|format(b.amount) }}</td>
-                    <td style="text-align: right;">
-                        <form action="{{ url_for('toggle_bill', id=b.id) }}" method="POST" style="display:inline;">
-                            <button type="submit" class="btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.85rem;">
+                    <td style="text-align: right; white-space: nowrap;">
+                        <form action="{{ url_for('toggle_bill', id=b.id) }}" method="POST" style="display: inline; margin: 0;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.25rem 0.55rem;">
                                 {{ 'Mark Unpaid' if b.is_paid else 'Mark Paid' }}
                             </button>
                         </form>
-                        <form action="{{ url_for('delete_bill', id=b.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this bill?');">
-                            <button type="submit" class="btn-danger">Delete</button>
+                        <form action="{{ url_for('delete_bill', id=b.id) }}" method="POST" style="display: inline; margin: 0;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-danger" style="font-size: 0.78rem; padding: 0.25rem 0.55rem;" onclick="return confirm('Delete this bill?');">
+                                Delete
+                            </button>
                         </form>
                     </td>
                 </tr>
@@ -109,11 +106,10 @@
         </table>
     </div>
     {% else %}
-    <div class="empty-state">
-        <p>No bills added yet.</p>
+    <div style="padding: 3rem 1.5rem; text-align: center; color: var(--text-muted);">
+        <p style="font-size: 1rem; font-weight: 600; color: var(--text-main);">No bills or subscriptions tracked yet</p>
+        <p style="font-size: 0.85rem; margin-top: 0.35rem;">Add your rent, utilities, and memberships above to get due date tracking.</p>
     </div>
     {% endif %}
 </div>
-{% endif %}
 {% endblock %}
-

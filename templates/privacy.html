@@ -1,50 +1,39 @@
 {% extends "base.html" %}
+
 {% block title %}Privacy Policy — KashFlow{% endblock %}
 
 {% block content %}
-<div class="legal-container" style="max-width: 800px; margin: 2rem auto 4rem; padding: 0 1rem;">
-    <div class="card" style="padding: 2.5rem 2rem;">
-        <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            🛡️ Privacy Policy
-        </h1>
-        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
-            Last Updated: July 2026 &nbsp;·&nbsp; KashFlow Financial Advisor
-        </p>
-
-        <div style="display: flex; flex-direction: column; gap: 1.5rem; font-size: 0.95rem; line-height: 1.7; color: var(--text-main);">
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">1. Information We Collect</h3>
-                <p style="color: var(--text-muted);">When you create an account on KashFlow, we collect your name and email address to manage your account and secure your data. When you log incomes, expenses, budgets, or savings goals, this financial information is stored isolated exclusively to your account.</p>
-            </section>
-
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">2. How We Use Your Data</h3>
-                <p style="color: var(--text-muted);">Your financial entries are used strictly to calculate your real-time <strong>Financial Health Score</strong>, compute your <strong>Daily Safe-to-Spend Allowance</strong>, generate personalized visual charts, and display actionable budget alerts.</p>
-            </section>
-
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">3. Data Security & Isolation</h3>
-                <p style="color: var(--text-muted);">We treat your privacy with extreme care. All passwords are cryptographically hashed using standard security algorithms (scrypt/PBKDF2). Every user's data is isolated so no third party or other user can ever view your financial records.</p>
-            </section>
-
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">4. Payments & Billing</h3>
-                <p style="color: var(--text-muted);">All Premium subscription transactions are processed securely through <strong>Stripe</strong>. KashFlow does not store or process your credit card numbers, CVVs, or payment details directly on our servers.</p>
-            </section>
-
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">5. Data Export & Account Deletion</h3>
-                <p style="color: var(--text-muted);">You retain complete ownership of your data. You can download a full CSV backup of your transactions anytime from your <a href="{{ url_for('settings') }}" style="color: var(--accent-primary);">Account Settings</a>, or request a complete wipe of your data.</p>
-            </section>
-
-            <section>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.5rem;">6. Contact Us</h3>
-                <p style="color: var(--text-muted);">If you have any questions about this Privacy Policy, please contact our support team at <a href="mailto:support@kashflow.app" style="color: var(--accent-primary);">support@kashflow.app</a>.</p>
-            </section>
+<div style="max-width: 760px; margin: 1.5rem auto;">
+    <div class="card">
+        <div class="card-header">
+            <h1 style="font-size: 1.4rem; font-weight: 700;">Privacy Policy</h1>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Updated November 2026</span>
         </div>
 
-        <div style="margin-top: 2.5rem; text-align: center;">
-            <a href="{{ url_for('dashboard') }}" class="btn-secondary" style="padding: 0.75rem 2rem;">← Back to Dashboard</a>
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; font-size: 0.92rem; line-height: 1.6; color: var(--text-muted);">
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">1. 100% Free Service</h3>
+                <p>KashFlow is a 100% free personal finance advisor and expense tracking application. We do not process payments, we do not require credit card details, and we do not sell your personal or financial data to third-party advertisers.</p>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">2. Information We Store</h3>
+                <p>We store your name, email address, and a cryptographically salted password hash to authenticate your access. The transactions, budgets, bills, and goals you enter are stored in an encrypted database strictly isolated to your user ID.</p>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">3. Data Security</h3>
+                <p>Your session is secured using modern cookie protection (HTTPOnly, SameSite, and HTTPS in production), form CSRF token validation, and rate-limiting on authentication endpoints to guard against brute-force attacks.</p>
+            </div>
+
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">4. Data Export & Permanent Deletion</h3>
+                <p>You have full sovereignty over your data. You can download all your transaction history as a CSV file at any time, or permanently delete your account and all associated financial records with one click in your Account Settings.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
         </div>
     </div>
 </div>

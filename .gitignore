@@ -11,9 +11,22 @@ instance/
 *.db
 *.sqlite3
 
-# Environment Variables & Secrets
+# Environment Variables & Secrets (never commit real values)
 .env
 .env.local
+
+# Android / store signing material & build outputs (never commit)
+*.keystore
+*.jks
+*.aab
+*.apk
+*.msix
+*.msixbundle
+*.appxbundle
+signing-key-info.txt
+
+# Local scratch / temporary work
+scratch/
 
 # IDE & OS Files
 .vscode/
