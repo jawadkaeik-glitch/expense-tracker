@@ -1,12 +1,12 @@
-const CACHE_NAME = 'kashflow-v2';
+const CACHE_NAME = 'kashflow-v2.1';
 const STATIC_ASSETS = [
   '/',
-  '/dashboard',
+  '/login',
+  '/manifest.json',
   '/static/css/style.css',
   '/static/js/main.js',
   '/static/icons/icon-192.png',
-  '/static/icons/icon-512.png',
-  '/static/manifest.json'
+  '/static/icons/icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {

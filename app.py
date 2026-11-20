@@ -1171,6 +1171,29 @@ def assetlinks():
     return send_from_directory(well_known_dir, "assetlinks.json", mimetype="application/json")
 
 
+@app.route("/sw.js")
+def service_worker():
+    response = send_from_directory(
+        os.path.join(app.root_path, "static"),
+        "sw.js",
+        mimetype="application/javascript"
+    )
+    response.headers['Service-Worker-Allowed'] = '/'
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    return response
+
+
+@app.route("/manifest.json")
+def manifest():
+    response = send_from_directory(
+        os.path.join(app.root_path, "static"),
+        "manifest.json",
+        mimetype="application/manifest+json"
+    )
+    response.headers['Cache-Control'] = 'no-cache'
+    return response
+
+
 # ───────────────────────────────────────────────────────────────
 # 15. INITIALIZATION
 # ───────────────────────────────────────────────────────────────

@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="KashFlow">
     <title>{% block title %}KashFlow — Personal Finance Advisor{% endblock %}</title>
 
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
 
@@ -273,5 +273,14 @@
 
 <!-- Client Interaction JS -->
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(reg => console.log('KashFlow SW registered:', reg.scope))
+            .catch(err => console.warn('KashFlow SW registration failed:', err));
+    });
+}
+</script>
 </body>
 </html>
